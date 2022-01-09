@@ -7,15 +7,15 @@ with open("README.md", "r", encoding="utf-8") as fh:
 extras_require = {"testing": ["nose", "coveralls"]}
 
 setuptools.setup(
-    name="mutwo.ext-example",
+    name="mutwo.ext-mmml",
     version="0.1.0",
     license="GPL",
-    description="example extension for event based framework for generative art",
+    description="MMML extension for event based framework for generative art",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Levin Eric Zimmermann",
     author_email="levin.eric.zimmermann@posteo.eu",
-    url="https://github.com/mutwo-org/mutwo.ext-example",
+    url="https://github.com/mutwo-org/mutwo.ext-mmml",
     project_urls={"Documentation": "https://mutwo.readthedocs.io/en/latest/"},
     packages=[
         package for package in setuptools.find_packages() if package[:5] != "tests"
