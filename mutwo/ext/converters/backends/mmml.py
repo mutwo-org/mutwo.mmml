@@ -30,10 +30,10 @@ except ImportError:
 
 from mutwo.core import converters
 from mutwo.core import events
-from mutwo.core import parameters
 
 from mutwo.ext.converters.backends import mmml_constants
 from mutwo.ext import events as ext_events
+from mutwo.ext import parameters as ext_parameters
 
 ___all___ = (
     "MMMLItemsConverter",
@@ -68,7 +68,7 @@ class MMMLItemsConverter(converters.abc.Converter):
         self,
         mmml_item_to_convert: str,
         previous_attribute_tuple: tuple[typing.Any, ...],
-    ) -> tuple[tuple[parameters.abc.Pitch, ...], tuple[typing.Any, ...]]:
+    ) -> tuple[tuple[ext_parameters.abc.Pitch, ...], tuple[typing.Any, ...]]:
         return (
             self._mmml_single_item_converter.convert(mmml_item_to_convert),
             previous_attribute_tuple,
@@ -77,7 +77,7 @@ class MMMLItemsConverter(converters.abc.Converter):
     def convert(
         self,
         mmml_items_to_convert: typing.Union[str, typing.Sequence[typing.Optional[str]]],
-    ) -> tuple[tuple[parameters.abc.Pitch, ...], ...]:
+    ) -> tuple[tuple[ext_parameters.abc.Pitch, ...], ...]:
         previous_item = self._default_value
         previous_attribute_tuple = self._default_attribute_tuple
 
@@ -109,11 +109,11 @@ class MMMLSinglePitchConverter(converters.abc.Converter):
     def __init__(
         self,
         decodex_or_decodex_function: typing.Union[
-            dict[str, parameters.abc.Pitch],
-            typing.Callable[[str], parameters.abc.Pitch],
+            dict[str, ext_parameters.abc.Pitch],
+            typing.Callable[[str], ext_parameters.abc.Pitch],
         ],
         octave_mark_processor: typing.Callable[
-            [parameters.abc.Pitch, typing.Optional[str]], parameters.abc.Pitch
+            [ext_parameters.abc.Pitch, typing.Optional[str]], ext_parameters.abc.Pitch
         ] = lambda pitch, _: pitch,
     ):
         self._decodex_or_decodex_function = decodex_or_decodex_function
@@ -121,7 +121,7 @@ class MMMLSinglePitchConverter(converters.abc.Converter):
 
     def convert(
         self, mmml_pitch_to_convert: str
-    ) -> typing.Optional[parameters.abc.Pitch]:
+    ) -> typing.Optional[ext_parameters.abc.Pitch]:
         mmml_pitch_class, *mmml_octave_mark = mmml_pitch_to_convert.split(
             mmml_constants.OCTAVE_IDENTIFIER
         )
@@ -208,7 +208,7 @@ class MMMLSingleJIPitchConverter(MMMLSinglePitchConverter):
     @staticmethod
     def _decodex_function(
         mmml_pitch_class_to_convert: str,
-    ) -> parameters.pitches.JustIntonationPitch:
+    ) -> ext_parameters.pitches.JustIntonationPitch:
         prime_to_exponent = (
             MMMLSingleJIPitchConverter._split_to_prime_and_exponent_pairs(
                 mmml_pitch_class_to_convert
@@ -224,14 +224,14 @@ class MMMLSingleJIPitchConverter(MMMLSinglePitchConverter):
             else:
                 denominator *= multiplied
 
-        pitch = parameters.pitches.JustIntonationPitch(f"{numerator}/{denominator}")
+        pitch = ext_parameters.pitches.JustIntonationPitch(f"{numerator}/{denominator}")
         return pitch
 
     @staticmethod
     def _octave_mark_processor(
-        just_intonation_pitch: parameters.pitches.JustIntonationPitch,
+        just_intonation_pitch: ext_parameters.pitches.JustIntonationPitch,
         mmml_octave_mark_to_apply: typing.Optional[str],
-    ) -> parameters.pitches.JustIntonationPitch:
+    ) -> ext_parameters.pitches.JustIntonationPitch:
         if mmml_octave_mark_to_apply:
             octave = int(mmml_octave_mark_to_apply)
         else:
@@ -243,7 +243,7 @@ class MMMLSingleJIPitchConverter(MMMLSinglePitchConverter):
 class MMMLSingleJIScalePitchConverter(MMMLSinglePitchConverter):
     def __init__(self, ratio_string: str):
         scale = tuple(
-            parameters.pitches.JustIntonationPitch(ratio)
+            ext_parameters.pitches.JustIntonationPitch(ratio)
             for ratio in ratio_string.split(" ")
         )
         decodex = {str(number + 1): pitch for number, pitch in enumerate(sorted(scale))}
@@ -251,15 +251,15 @@ class MMMLSingleJIScalePitchConverter(MMMLSinglePitchConverter):
 
     @staticmethod
     def _octave_mark_processor(
-        just_intonation_pitch: parameters.pitches.JustIntonationPitch,
+        just_intonation_pitch: ext_parameters.pitches.JustIntonationPitch,
         mmml_octave_mark_to_apply: typing.Optional[str],
-    ) -> parameters.pitches.JustIntonationPitch:
+    ) -> ext_parameters.pitches.JustIntonationPitch:
         if mmml_octave_mark_to_apply:
             octave = int(mmml_octave_mark_to_apply)
         else:
             octave = 0
         return just_intonation_pitch.add(
-            parameters.pitches.JustIntonationPitch("1/1").register(octave), mutate=False
+            ext_parameters.pitches.JustIntonationPitch("1/1").register(octave), mutate=False
         )
 
 
@@ -283,14 +283,14 @@ class MMMLPitchesConverter(MMMLItemsConverter):
     def __init__(
         self,
         mmml_single_pitch_converter: MMMLSinglePitchConverter = MMMLSinglePitchConverter(
-            lambda frequency: parameters.pitches.DirectPitch(float(frequency)),
-            lambda pitch, octave: parameters.pitches.DirectPitch(
+            lambda frequency: ext_parameters.pitches.DirectPitch(float(frequency)),
+            lambda pitch, octave: ext_parameters.pitches.DirectPitch(
                 pitch.frequency * (2 ** int(octave))
             )
             if octave
             else pitch,
         ),
-        default_pitch: parameters.abc.Pitch = parameters.pitches.DirectPitch(440),
+        default_pitch: ext_parameters.abc.Pitch = ext_parameters.pitches.DirectPitch(440),
         default_octave_mark: str = "0",
     ):
         super().__init__(
@@ -308,7 +308,7 @@ class MMMLPitchesConverter(MMMLItemsConverter):
         self,
         mmml_pitch_or_pitch_to_convert_list: str,
         previous_attribute_tuple: tuple[typing.Any, ...],
-    ) -> tuple[tuple[parameters.abc.Pitch, ...], tuple[typing.Any, ...]]:
+    ) -> tuple[tuple[ext_parameters.abc.Pitch, ...], tuple[typing.Any, ...]]:
         previous_octave_mark, *_ = previous_attribute_tuple
         converted_chord = []
         for mmml_pitch_to_convert in mmml_pitch_or_pitch_to_convert_list.split(
@@ -358,13 +358,13 @@ class MMMLSingleVolumeConverter(converters.abc.Converter):
     def __init__(
         self,
         decodex_or_decodex_function: typing.Union[
-            dict[str, parameters.abc.Pitch],
-            typing.Callable[[str], parameters.abc.Pitch],
+            dict[str, ext_parameters.abc.Pitch],
+            typing.Callable[[str], ext_parameters.abc.Pitch],
         ],
     ):
         self._decodex_or_decodex_function = decodex_or_decodex_function
 
-    def convert(self, mmml_volume_to_convert: str) -> parameters.abc.Volume:
+    def convert(self, mmml_volume_to_convert: str) -> ext_parameters.abc.Volume:
         if hasattr(self._decodex_or_decodex_function, "__call__"):
             mutwo_volume = self._decodex_or_decodex_function(mmml_volume_to_convert)
         else:
@@ -377,8 +377,8 @@ class MMMLSingleWesternVolumeConverter(MMMLSingleVolumeConverter):
     def __init__(self):
         super().__init__(
             {
-                dynamic_indicator: parameters.volumes.WesternVolume(dynamic_indicator)
-                for dynamic_indicator in parameters.volumes_constants.DYNAMIC_INDICATOR_TUPLE
+                dynamic_indicator: ext_parameters.volumes.WesternVolume(dynamic_indicator)
+                for dynamic_indicator in ext_parameters.volumes_constants.DYNAMIC_INDICATOR_TUPLE
             }
         )
 
@@ -389,7 +389,7 @@ class MMMLVolumesConverter(MMMLItemsConverter):
     def __init__(
         self,
         mmml_single_volume_converter: MMMLSingleVolumeConverter = MMMLSingleWesternVolumeConverter(),
-        default_volume=parameters.volumes.WesternVolume("mf"),
+        default_volume=ext_parameters.volumes.WesternVolume("mf"),
     ):
         super().__init__(mmml_single_volume_converter, default_volume, tuple([]))
 
@@ -428,7 +428,7 @@ def _find_allowed_name_dict() -> dict:
         return class_name_to_class
 
     _allowed_name_dict = {}
-    for module_name in ("mutwo.parameters", "mutwo.events"):
+    for module_name in ("mutwo.ext.parameters", "mutwo.ext.events", "mutwo.core.events"):
         _allowed_name_dict.update(_iterate_module(module_name))
     return _allowed_name_dict
 
