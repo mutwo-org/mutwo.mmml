@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2022-03-10
+
+### Changed
+- update dependencies
+- move to new namespace package structure
+- move `constants` to `configurations`
+
+
 ## [0.2.0] - 2022-01-14
 
 ### Changed

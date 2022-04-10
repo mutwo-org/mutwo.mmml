@@ -28,12 +28,11 @@ try:
 except ImportError:
     import fractions  # type: ignore
 
-from mutwo.core import converters
-from mutwo.core import events
-
-from mutwo.ext.converters.backends import mmml_constants
-from mutwo.ext import events as ext_events
-from mutwo.ext import parameters as ext_parameters
+from mutwo import core_converters
+from mutwo import core_events
+from mutwo import mmml_converters
+from mutwo import music_events
+from mutwo import music_parameters
 
 ___all___ = (
     "MMMLItemsConverter",
@@ -51,12 +50,12 @@ ___all___ = (
 )
 
 
-class MMMLItemsConverter(converters.abc.Converter):
+class MMMLItemsConverter(core_converters.abc.Converter):
     """Convert one or multiple MMML items to mutwo objects."""
 
     def __init__(
         self,
-        mmml_single_item_converter: converters.abc.Converter,
+        mmml_single_item_converter: core_converters.abc.Converter,
         default_value: typing.Any,
         default_attribute_tuple: tuple[typing.Any, ...],
     ):
@@ -68,7 +67,7 @@ class MMMLItemsConverter(converters.abc.Converter):
         self,
         mmml_item_to_convert: str,
         previous_attribute_tuple: tuple[typing.Any, ...],
-    ) -> tuple[tuple[ext_parameters.abc.Pitch, ...], tuple[typing.Any, ...]]:
+    ) -> tuple[tuple[music_parameters.abc.Pitch, ...], tuple[typing.Any, ...]]:
         return (
             self._mmml_single_item_converter.convert(mmml_item_to_convert),
             previous_attribute_tuple,
@@ -77,12 +76,12 @@ class MMMLItemsConverter(converters.abc.Converter):
     def convert(
         self,
         mmml_items_to_convert: typing.Union[str, typing.Sequence[typing.Optional[str]]],
-    ) -> tuple[tuple[ext_parameters.abc.Pitch, ...], ...]:
+    ) -> tuple[tuple[music_parameters.abc.Pitch, ...], ...]:
         previous_item = self._default_value
         previous_attribute_tuple = self._default_attribute_tuple
 
         mmml_items_to_iterate = (
-            mmml_items_to_convert.split(mmml_constants.EVENT_IDENTIFIER)
+            mmml_items_to_convert.split(mmml_converters.configurations.EVENT_IDENTIFIER)
             if hasattr(mmml_items_to_convert, "split")
             else mmml_items_to_convert
         )
@@ -103,17 +102,18 @@ class MMMLItemsConverter(converters.abc.Converter):
         return tuple(converted_item_list)
 
 
-class MMMLSinglePitchConverter(converters.abc.Converter):
+class MMMLSinglePitchConverter(core_converters.abc.Converter):
     """Convert a single MMML pitch string to a mutwo pitch object."""
 
     def __init__(
         self,
         decodex_or_decodex_function: typing.Union[
-            dict[str, ext_parameters.abc.Pitch],
-            typing.Callable[[str], ext_parameters.abc.Pitch],
+            dict[str, music_parameters.abc.Pitch],
+            typing.Callable[[str], music_parameters.abc.Pitch],
         ],
         octave_mark_processor: typing.Callable[
-            [ext_parameters.abc.Pitch, typing.Optional[str]], ext_parameters.abc.Pitch
+            [music_parameters.abc.Pitch, typing.Optional[str]],
+            music_parameters.abc.Pitch,
         ] = lambda pitch, _: pitch,
     ):
         self._decodex_or_decodex_function = decodex_or_decodex_function
@@ -121,12 +121,12 @@ class MMMLSinglePitchConverter(converters.abc.Converter):
 
     def convert(
         self, mmml_pitch_to_convert: str
-    ) -> typing.Optional[ext_parameters.abc.Pitch]:
+    ) -> typing.Optional[music_parameters.abc.Pitch]:
         mmml_pitch_class, *mmml_octave_mark = mmml_pitch_to_convert.split(
-            mmml_constants.OCTAVE_IDENTIFIER
+            mmml_converters.configurations.OCTAVE_IDENTIFIER
         )
 
-        if mmml_pitch_class == mmml_constants.REST_IDENTIFIER:
+        if mmml_pitch_class == mmml_converters.configurations.REST_IDENTIFIER:
             return None
 
         if mmml_octave_mark:
@@ -182,10 +182,16 @@ class MMMLSingleJIPitchConverter(MMMLSinglePitchConverter):
                     )
                 else:
                     current_base += element
-            elif element == mmml_constants.JUST_INTONATION_POSITIVE_EXPONENT_IDENTIFIER:
+            elif (
+                element
+                == mmml_converters.configurations.JUST_INTONATION_POSITIVE_EXPONENT_IDENTIFIER
+            ):
                 is_separating = True
                 current_exponent += 1
-            elif element == mmml_constants.JUST_INTONATION_NEGATIVE_EXPONENT_IDENTIFIER:
+            elif (
+                element
+                == mmml_converters.configurations.JUST_INTONATION_NEGATIVE_EXPONENT_IDENTIFIER
+            ):
                 is_separating = True
                 current_exponent -= 1
             else:
@@ -208,7 +214,7 @@ class MMMLSingleJIPitchConverter(MMMLSinglePitchConverter):
     @staticmethod
     def _decodex_function(
         mmml_pitch_class_to_convert: str,
-    ) -> ext_parameters.pitches.JustIntonationPitch:
+    ) -> music_parameters.JustIntonationPitch:
         prime_to_exponent = (
             MMMLSingleJIPitchConverter._split_to_prime_and_exponent_pairs(
                 mmml_pitch_class_to_convert
@@ -224,14 +230,14 @@ class MMMLSingleJIPitchConverter(MMMLSinglePitchConverter):
             else:
                 denominator *= multiplied
 
-        pitch = ext_parameters.pitches.JustIntonationPitch(f"{numerator}/{denominator}")
+        pitch = music_parameters.JustIntonationPitch(f"{numerator}/{denominator}")
         return pitch
 
     @staticmethod
     def _octave_mark_processor(
-        just_intonation_pitch: ext_parameters.pitches.JustIntonationPitch,
+        just_intonation_pitch: music_parameters.JustIntonationPitch,
         mmml_octave_mark_to_apply: typing.Optional[str],
-    ) -> ext_parameters.pitches.JustIntonationPitch:
+    ) -> music_parameters.JustIntonationPitch:
         if mmml_octave_mark_to_apply:
             octave = int(mmml_octave_mark_to_apply)
         else:
@@ -243,7 +249,7 @@ class MMMLSingleJIPitchConverter(MMMLSinglePitchConverter):
 class MMMLSingleJIScalePitchConverter(MMMLSinglePitchConverter):
     def __init__(self, ratio_string: str):
         scale = tuple(
-            ext_parameters.pitches.JustIntonationPitch(ratio)
+            music_parameters.JustIntonationPitch(ratio)
             for ratio in ratio_string.split(" ")
         )
         decodex = {str(number + 1): pitch for number, pitch in enumerate(sorted(scale))}
@@ -251,15 +257,15 @@ class MMMLSingleJIScalePitchConverter(MMMLSinglePitchConverter):
 
     @staticmethod
     def _octave_mark_processor(
-        just_intonation_pitch: ext_parameters.pitches.JustIntonationPitch,
+        just_intonation_pitch: music_parameters.JustIntonationPitch,
         mmml_octave_mark_to_apply: typing.Optional[str],
-    ) -> ext_parameters.pitches.JustIntonationPitch:
+    ) -> music_parameters.JustIntonationPitch:
         if mmml_octave_mark_to_apply:
             octave = int(mmml_octave_mark_to_apply)
         else:
             octave = 0
         return just_intonation_pitch.add(
-            ext_parameters.pitches.JustIntonationPitch("1/1").register(octave), mutate=False
+            music_parameters.JustIntonationPitch("1/1").register(octave), mutate=False
         )
 
 
@@ -283,14 +289,14 @@ class MMMLPitchesConverter(MMMLItemsConverter):
     def __init__(
         self,
         mmml_single_pitch_converter: MMMLSinglePitchConverter = MMMLSinglePitchConverter(
-            lambda frequency: ext_parameters.pitches.DirectPitch(float(frequency)),
-            lambda pitch, octave: ext_parameters.pitches.DirectPitch(
+            lambda frequency: music_parameters.DirectPitch(float(frequency)),
+            lambda pitch, octave: music_parameters.DirectPitch(
                 pitch.frequency * (2 ** int(octave))
             )
             if octave
             else pitch,
         ),
-        default_pitch: ext_parameters.abc.Pitch = ext_parameters.pitches.DirectPitch(440),
+        default_pitch: music_parameters.abc.Pitch = music_parameters.DirectPitch(440),
         default_octave_mark: str = "0",
     ):
         super().__init__(
@@ -299,7 +305,9 @@ class MMMLPitchesConverter(MMMLItemsConverter):
 
     @staticmethod
     def _get_octave_mark(mmml_pitch: str) -> typing.Optional[str]:
-        _, *mmml_octave_mark = mmml_pitch.split(mmml_constants.OCTAVE_IDENTIFIER)
+        _, *mmml_octave_mark = mmml_pitch.split(
+            mmml_converters.configurations.OCTAVE_IDENTIFIER
+        )
         if mmml_octave_mark:
             return mmml_octave_mark[0]
         return None
@@ -308,11 +316,11 @@ class MMMLPitchesConverter(MMMLItemsConverter):
         self,
         mmml_pitch_or_pitch_to_convert_list: str,
         previous_attribute_tuple: tuple[typing.Any, ...],
-    ) -> tuple[tuple[ext_parameters.abc.Pitch, ...], tuple[typing.Any, ...]]:
+    ) -> tuple[tuple[music_parameters.abc.Pitch, ...], tuple[typing.Any, ...]]:
         previous_octave_mark, *_ = previous_attribute_tuple
         converted_chord = []
         for mmml_pitch_to_convert in mmml_pitch_or_pitch_to_convert_list.split(
-            mmml_constants.MULTIPLE_PITCHES_IDENTIFIER
+            mmml_converters.configurations.MULTIPLE_PITCHES_IDENTIFIER
         ):
             current_octave_mark = self._get_octave_mark(mmml_pitch_to_convert)
             if current_octave_mark:
@@ -330,7 +338,7 @@ class MMMLPitchesConverter(MMMLItemsConverter):
         return converted_chord, (previous_octave_mark,)
 
 
-class MMMLSingleRhythmConverter(converters.abc.Converter):
+class MMMLSingleRhythmConverter(core_converters.abc.Converter):
     """Convert a single MMML rhythm string to a Python Fraction object."""
 
     def convert(self, mmml_rhythm_to_convert: str) -> fractions.Fraction:
@@ -352,19 +360,19 @@ class MMMLRhythmsConverter(MMMLItemsConverter):
         super().__init__(mmml_single_rhythm_converter, default_rhythm, tuple([]))
 
 
-class MMMLSingleVolumeConverter(converters.abc.Converter):
+class MMMLSingleVolumeConverter(core_converters.abc.Converter):
     """Convert a single MMML volume string to a mutwo volume object."""
 
     def __init__(
         self,
         decodex_or_decodex_function: typing.Union[
-            dict[str, ext_parameters.abc.Pitch],
-            typing.Callable[[str], ext_parameters.abc.Pitch],
+            dict[str, music_parameters.abc.Pitch],
+            typing.Callable[[str], music_parameters.abc.Pitch],
         ],
     ):
         self._decodex_or_decodex_function = decodex_or_decodex_function
 
-    def convert(self, mmml_volume_to_convert: str) -> ext_parameters.abc.Volume:
+    def convert(self, mmml_volume_to_convert: str) -> music_parameters.abc.Volume:
         if hasattr(self._decodex_or_decodex_function, "__call__"):
             mutwo_volume = self._decodex_or_decodex_function(mmml_volume_to_convert)
         else:
@@ -377,8 +385,8 @@ class MMMLSingleWesternVolumeConverter(MMMLSingleVolumeConverter):
     def __init__(self):
         super().__init__(
             {
-                dynamic_indicator: ext_parameters.volumes.WesternVolume(dynamic_indicator)
-                for dynamic_indicator in ext_parameters.volumes_constants.DYNAMIC_INDICATOR_TUPLE
+                dynamic_indicator: music_parameters.WesternVolume(dynamic_indicator)
+                for dynamic_indicator in music_parameters.constants.DYNAMIC_INDICATOR_TUPLE
             }
         )
 
@@ -389,7 +397,7 @@ class MMMLVolumesConverter(MMMLItemsConverter):
     def __init__(
         self,
         mmml_single_volume_converter: MMMLSingleVolumeConverter = MMMLSingleWesternVolumeConverter(),
-        default_volume=ext_parameters.volumes.WesternVolume("mf"),
+        default_volume=music_parameters.WesternVolume("mf"),
     ):
         super().__init__(mmml_single_volume_converter, default_volume, tuple([]))
 
@@ -428,12 +436,16 @@ def _find_allowed_name_dict() -> dict:
         return class_name_to_class
 
     _allowed_name_dict = {}
-    for module_name in ("mutwo.ext.parameters", "mutwo.ext.events", "mutwo.core.events"):
+    for module_name in (
+        "mutwo.ext.parameters",
+        "mutwo.ext.events",
+        "mutwo.core.events",
+    ):
         _allowed_name_dict.update(_iterate_module(module_name))
     return _allowed_name_dict
 
 
-class MMMLSingleAttributeConverter(converters.abc.Converter):
+class MMMLSingleAttributeConverter(core_converters.abc.Converter):
     """Convert a single MMML attribute to a function which can be applied on a :class:`~mutwo.ext.events.music.NoteLike`."""
 
     _allowed_name_dict = _find_allowed_name_dict()
@@ -451,31 +463,34 @@ class MMMLSingleAttributeConverter(converters.abc.Converter):
 
     def convert(
         self, mmml_attribute_to_convert: str
-    ) -> typing.Callable[[ext_events.music.NoteLike], None]:
+    ) -> typing.Callable[[music_events.NoteLike], None]:
         try:
             assert (
-                mmml_attribute_to_convert[-1] == mmml_constants.ATTRIBUTE_END_IDENTIFIER
+                mmml_attribute_to_convert[-1]
+                == mmml_converters.configurations.ATTRIBUTE_END_IDENTIFIER
             )
         except AssertionError:
             message = f"Found malformated attribute tag '{mmml_attribute_to_convert}' "
             message += "which isn't closed with the expected end identifier "
-            message += f"{mmml_constants.ATTRIBUTE_END_IDENTIFIER}'!"
+            message += f"{mmml_converters.configurations.ATTRIBUTE_END_IDENTIFIER}'!"
             raise ValueError(message)
 
-        def apply_attributes(note_like: ext_events.music.NoteLike):
+        def apply_attributes(note_like: music_events.NoteLike):
             for attribute_to_apply in mmml_attribute_to_convert[:-1].split(
-                mmml_constants.MULTIPLE_ATTRIBUTES_IDENTIFIER
+                mmml_converters.configurations.MULTIPLE_ATTRIBUTES_IDENTIFIER
             ):
                 try:
                     attribute_names, attribute_value = attribute_to_apply.split(
-                        mmml_constants.ATTRIBUTE_DEFINITION_IDENTIFIER
+                        mmml_converters.configurations.ATTRIBUTE_DEFINITION_IDENTIFIER
                     )
                 except ValueError:
                     message = (
                         f"Found invalid attribute definition: '{attribute_to_apply}'!"
                     )
                     message += " Did you forget to put the seperator '"
-                    message += mmml_constants.MULTIPLE_ATTRIBUTES_IDENTIFIER
+                    message += (
+                        mmml_converters.configurations.MULTIPLE_ATTRIBUTES_IDENTIFIER
+                    )
                     message += "' between two or more attribute definitions?"
                     message += " Did you forget the attribute name on the left side "
                     message += (
@@ -529,7 +544,7 @@ class MMMLAttributesConverter(MMMLItemsConverter):
         )
 
 
-class MMMLEventsConverter(converters.abc.Converter):
+class MMMLEventsConverter(core_converters.abc.Converter):
     def __init__(
         self,
         mmml_pitches_converter: MMMLPitchesConverter = MMMLPitchesConverter(),
@@ -546,9 +561,9 @@ class MMMLEventsConverter(converters.abc.Converter):
         self, mmml_event_to_convert: str, value_dict: dict, position_dict: dict
     ):
         for name, identifier in (
-            ("volume", mmml_constants.DYNAMIC_IDENTIFIER),
-            ("duration", mmml_constants.RHYTHM_IDENTIFIER),
-            ("attribute", mmml_constants.ATTRIBUTE_START_IDENTIFIER),
+            ("volume", mmml_converters.configurations.DYNAMIC_IDENTIFIER),
+            ("duration", mmml_converters.configurations.RHYTHM_IDENTIFIER),
+            ("attribute", mmml_converters.configurations.ATTRIBUTE_START_IDENTIFIER),
         ):
             try:
                 position = mmml_event_to_convert.index(identifier)
@@ -632,9 +647,9 @@ class MMMLEventsConverter(converters.abc.Converter):
         duration_to_convert_list: list[str],
         volume_to_convert_list: list[str],
         attribute_to_convert_list: list[str],
-        grace_note_list_list: list[events.basic.SequentialEvent],
-        after_grace_note_list_list: list[events.basic.SequentialEvent],
-    ) -> events.basic.SequentialEvent[ext_events.music.NoteLike]:
+        grace_note_list_list: list[core_events.SequentialEvent],
+        after_grace_note_list_list: list[core_events.SequentialEvent],
+    ) -> core_events.SequentialEvent[music_events.NoteLike]:
         converted_pitch_tuple = self._mmml_pitches_converter.convert(
             pitch_to_convert_list
         )
@@ -648,7 +663,7 @@ class MMMLEventsConverter(converters.abc.Converter):
             attribute_to_convert_list
         )
 
-        converted_event_sequential_event = events.basic.SequentialEvent([])
+        converted_event_sequential_event = core_events.SequentialEvent([])
         for (
             pitches,
             rhythm,
@@ -664,7 +679,7 @@ class MMMLEventsConverter(converters.abc.Converter):
             grace_note_list_list,
             after_grace_note_list_list,
         ):
-            note_like = ext_events.music.NoteLike(
+            note_like = music_events.NoteLike(
                 pitches,
                 rhythm,
                 volume,
@@ -678,18 +693,21 @@ class MMMLEventsConverter(converters.abc.Converter):
 
     def convert(
         self, mmml_events_to_convert: str
-    ) -> events.basic.SequentialEvent[ext_events.music.NoteLike]:
+    ) -> core_events.SequentialEvent[music_events.NoteLike]:
         split_lines = map(
             lambda line_with_whitespace: line_with_whitespace.lstrip(),
             mmml_events_to_convert.split("\n"),
         )
         mmml_lines_to_convert = " ".join(
             map(
-                lambda line: line[: line.index(mmml_constants.COMMENT_IDENTIFIER)]
-                if mmml_constants.COMMENT_IDENTIFIER in line
+                lambda line: line[
+                    : line.index(mmml_converters.configurations.COMMENT_IDENTIFIER)
+                ]
+                if mmml_converters.configurations.COMMENT_IDENTIFIER in line
                 else line,
                 filter(
-                    lambda line: line and line[0] != mmml_constants.COMMENT_IDENTIFIER,
+                    lambda line: line
+                    and line[0] != mmml_converters.configurations.COMMENT_IDENTIFIER,
                     split_lines,
                 ),
             )
@@ -697,7 +715,9 @@ class MMMLEventsConverter(converters.abc.Converter):
         mmml_event_or_grace_note_to_convert_iterator = iter(
             filter(
                 lambda item: bool(item),
-                mmml_lines_to_convert.split(mmml_constants.EVENT_IDENTIFIER),
+                mmml_lines_to_convert.split(
+                    mmml_converters.configurations.EVENT_IDENTIFIER
+                ),
             )
         )
         pitch_to_convert_list = []
@@ -710,7 +730,7 @@ class MMMLEventsConverter(converters.abc.Converter):
         def test_note_lists():
             for note_list in (grace_note_list_list, after_grace_note_list_list):
                 if len(pitch_to_convert_list) > len(note_list):
-                    note_list.append(events.basic.SequentialEvent([]))
+                    note_list.append(core_events.SequentialEvent([]))
 
         while True:
             try:
@@ -723,16 +743,20 @@ class MMMLEventsConverter(converters.abc.Converter):
                 is_grace_note_list, is_after_grace_note_list = False, False
                 if (
                     mmml_event_or_grace_note_to_convert[
-                        : len(mmml_constants.BEFORE_GRACE_NOTE_LIST_IDENTIFIER)
+                        : len(
+                            mmml_converters.configurations.BEFORE_GRACE_NOTE_LIST_IDENTIFIER
+                        )
                     ]
-                    == mmml_constants.BEFORE_GRACE_NOTE_LIST_IDENTIFIER
+                    == mmml_converters.configurations.BEFORE_GRACE_NOTE_LIST_IDENTIFIER
                 ):
                     is_grace_note_list = True
                 elif (
                     mmml_event_or_grace_note_to_convert[
-                        : len(mmml_constants.AFTER_GRACE_NOTE_LIST_IDENTIFIER)
+                        : len(
+                            mmml_converters.configurations.AFTER_GRACE_NOTE_LIST_IDENTIFIER
+                        )
                     ]
-                    == mmml_constants.AFTER_GRACE_NOTE_LIST_IDENTIFIER
+                    == mmml_converters.configurations.AFTER_GRACE_NOTE_LIST_IDENTIFIER
                 ):
                     is_after_grace_note_list = True
 
@@ -755,11 +779,11 @@ class MMMLEventsConverter(converters.abc.Converter):
                     try:
                         assert (
                             start_grace_note_identifier
-                            == mmml_constants.GRACE_NOTE_LIST_START_IDENTIFIER
+                            == mmml_converters.configurations.GRACE_NOTE_LIST_START_IDENTIFIER
                         )
                     except AssertionError:
                         message = f"Found '{start_grace_note_identifier}' instead of start grace "
-                        message += f"note list identifier '{mmml_constants.GRACE_NOTE_LIST_START_IDENTIFIER}'"
+                        message += f"note list identifier '{mmml_converters.configurations.GRACE_NOTE_LIST_START_IDENTIFIER}'"
                         message += f"after grace note identifier '{mmml_event_or_grace_note_to_convert}'!"
                         raise ValueError(message)
 
@@ -769,7 +793,7 @@ class MMMLEventsConverter(converters.abc.Converter):
                         )
                         if (
                             grace_note_event_or_stop_identifier
-                            == mmml_constants.GRACE_NOTE_LIST_END_IDENTIFIER
+                            == mmml_converters.configurations.GRACE_NOTE_LIST_END_IDENTIFIER
                         ):
                             break
                         else:
@@ -799,7 +823,7 @@ class MMMLEventsConverter(converters.abc.Converter):
         )
 
 
-class MMMLConverter(converters.abc.Converter):
+class MMMLConverter(core_converters.abc.Converter):
     def __init__(
         self, mmml_events_converter: MMMLEventsConverter = MMMLEventsConverter()
     ):
@@ -807,11 +831,11 @@ class MMMLConverter(converters.abc.Converter):
 
     def convert(
         self, mmml_to_convert: str
-    ) -> dict[str, events.basic.SequentialEvent[ext_events.music.NoteLike]]:
-        if mmml_constants.VARIABLE_IDENTIFIER in mmml_to_convert:
+    ) -> dict[str, core_events.SequentialEvent[music_events.NoteLike]]:
+        if mmml_converters.configurations.VARIABLE_IDENTIFIER in mmml_to_convert:
             parts = {}
             for variable_data in mmml_to_convert.split(
-                mmml_constants.VARIABLE_IDENTIFIER
+                mmml_converters.configurations.VARIABLE_IDENTIFIER
             ):
                 if variable_data and variable_data != "\n":
                     variable_name, events = variable_data.split("\n", 1)
@@ -824,7 +848,7 @@ class MMMLConverter(converters.abc.Converter):
             return {"undefined": self._mmml_events_converter.convert(mmml_to_convert)}
 
 
-class IniFileToMMMLConverter(converters.abc.Converter):
+class IniFileToMMMLConverter(core_converters.abc.Converter):
     """Convert .ini file to a :class:`MMMLConverter`.
 
     Default and example ini File:
