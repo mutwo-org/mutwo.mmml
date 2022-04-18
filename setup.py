@@ -1,6 +1,6 @@
 import setuptools  # type: ignore
 
-MAJOR, MINOR, PATCH = 0, 3, 0
+MAJOR, MINOR, PATCH = 0, 3, 1
 VERSION = f"{MAJOR}.{MINOR}.{PATCH}"
 """This project uses semantic versioning.
 See https://semver.org/
@@ -32,7 +32,7 @@ setuptools.setup(
     setup_requires=[],
     install_requires=[
         "mutwo.ext-core>=0.58.0, <0.60.0",
-        "mutwo.ext-music>=0.11.0, <0.14.0",
+        "mutwo.ext-music>=0.11.0, <0.15.0",
     ],
     extras_require=extras_require,
     python_requires=">=3.9, <4",
