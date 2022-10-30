@@ -14,7 +14,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 extras_require = {"testing": ["nose", "coveralls"]}
 
 setuptools.setup(
-    name="mutwo.ext-mmml",
+    name="mutwo.mmml",
     version=VERSION,
     license="GPL",
     description="MMML extension for event based framework for generative art",
