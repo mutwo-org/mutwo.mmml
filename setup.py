@@ -1,12 +1,10 @@
 import setuptools  # type: ignore
 
-MAJOR, MINOR, PATCH = 0, 3, 3
-VERSION = f"{MAJOR}.{MINOR}.{PATCH}"
-"""This project uses semantic versioning.
-See https://semver.org/
-Before MAJOR = 1, there is no promise for
-backwards compatibility between minor versions.
-"""
+version = {}
+with open("mutwo/mmml_version/__init__.py") as fp:
+    exec(fp.read(), version)
+
+VERSION = version["VERSION"]
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
