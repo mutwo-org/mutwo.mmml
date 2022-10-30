@@ -437,16 +437,17 @@ def _find_allowed_name_dict() -> dict:
 
     _allowed_name_dict = {}
     for module_name in (
-        "mutwo.ext.parameters",
-        "mutwo.ext.events",
-        "mutwo.core.events",
+        "mutwo.core_events",
+        "mutwo.core_parameters",
+        "mutwo.music_events",
+        "mutwo.music_parameters",
     ):
         _allowed_name_dict.update(_iterate_module(module_name))
     return _allowed_name_dict
 
 
 class MMMLSingleAttributeConverter(core_converters.abc.Converter):
-    """Convert a single MMML attribute to a function which can be applied on a :class:`~mutwo.ext.events.music.NoteLike`."""
+    """Convert a single MMML attribute to a function which can be applied on a :class:`~mutwo.music_events.NoteLike`."""
 
     _allowed_name_dict = _find_allowed_name_dict()
 
