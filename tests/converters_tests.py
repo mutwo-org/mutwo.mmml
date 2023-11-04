@@ -13,7 +13,7 @@ sim = core_events.TaggedSimultaneousEvent
 class MMMLExpressionToEventTest(unittest.TestCase):
     def setUp(self):
         self.c = mmml_converters.MMMLExpressionToEvent()
-        self.reset = mmml_converters.constants.SOLVER_REGISTRY.reset_defaults
+        self.reset = mmml_converters.constants.DECODER_REGISTRY.reset_defaults
         self.reset()
 
     def test_mustache(self):
@@ -60,8 +60,8 @@ class MMMLExpressionToEventTest(unittest.TestCase):
         # line in between
         self.assertEqual(seq([n(), n()]), self.c("seq\n\n\n    n\n\n\n    n"))
 
-    def test_solver_n(self):
-        """Test that builtin solver 'n' returns NoteLike with correct attr"""
+    def test_decoder_n(self):
+        """Test that builtin decoder 'n' returns NoteLike with correct attr"""
 
         self.assertEqual(n(), self.c("n"))
 
@@ -79,8 +79,8 @@ class MMMLExpressionToEventTest(unittest.TestCase):
         # Set volume
         self.assertEqual(n("c4", volume="f"), self.c("n 1 c4 f"))
 
-    def test_solver_r(self):
-        """Test that builtin solver 'r' returns NoteLike with correct attr"""
+    def test_decoder_r(self):
+        """Test that builtin decoder 'r' returns NoteLike with correct attr"""
 
         self.assertEqual(n(), self.c("r"))
 
@@ -88,8 +88,8 @@ class MMMLExpressionToEventTest(unittest.TestCase):
         self.assertEqual(n(duration=2), self.c("r 2"))
         self.assertEqual(n(duration="1/4"), self.c("r 1/4"))
 
-    def test_solver_seq(self):
-        """Test that builtin solver 'seq' returns TaggedSequentialEvent"""
+    def test_decoder_seq(self):
+        """Test that builtin decoder 'seq' returns TaggedSequentialEvent"""
 
         self.assertEqual(seq(), self.c("seq"))
 
@@ -107,8 +107,8 @@ class MMMLExpressionToEventTest(unittest.TestCase):
             self.c("seq\n" "    n\n" "    seq\n" "        n\n" "    n"),
         )
 
-    def test_solver_sim(self):
-        """Test that builtin solver 'sim' returns TaggedSimultaneousEvent"""
+    def test_decoder_sim(self):
+        """Test that builtin decoder 'sim' returns TaggedSimultaneousEvent"""
 
         self.assertEqual(sim(), self.c("sim"))
 

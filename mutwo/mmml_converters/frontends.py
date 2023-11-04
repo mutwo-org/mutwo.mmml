@@ -111,7 +111,7 @@ def process_header(header: str) -> core_events.abc.Event:
             data.extend(n.split("\t"))
     expression_name, *arguments = filter(bool, data)
     try:
-        solver = mmml_converters.constants.SOLVER_REGISTRY[expression_name]
+        decoder = mmml_converters.constants.DECODER_REGISTRY[expression_name]
     except KeyError:
-        raise mmml_utilities.NoSolverExists(expression_name)
-    return solver(*arguments)
+        raise mmml_utilities.NoDecoderExists(expression_name)
+    return decoder(*arguments)

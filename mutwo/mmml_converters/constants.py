@@ -1,6 +1,6 @@
 from mutwo import mmml_utilities
 
-SOLVER_REGISTRY = mmml_utilities.SolverRegistry()
+DECODER_REGISTRY = mmml_utilities.DecoderRegistry()
 INDENTATION = r"    "
 
 del mmml_utilities

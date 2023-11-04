@@ -3,13 +3,13 @@ from mutwo import mmml_converters
 from mutwo import music_events
 
 
-__all__ = ("register_solver",)
+__all__ = ("register_decoder",)
 
 
-register_solver = mmml_converters.constants.SOLVER_REGISTRY.register_solver
+register_decoder = mmml_converters.constants.DECODER_REGISTRY.register_decoder
 
 
-@register_solver
+@register_decoder
 def n(duration=1, pitch="", *args):
     # In mutwo.music we simply use space for separating between
     # multiple pitches. In a MMML expression this isn't possible,
@@ -22,16 +22,16 @@ def n(duration=1, pitch="", *args):
     return music_events.NoteLike(pitch, duration, *args)
 
 
-@register_solver
+@register_decoder
 def r(duration=1, *args):
     return music_events.NoteLike([], duration, *args)
 
 
-@register_solver
+@register_decoder
 def seq(tag=None):
     return core_events.TaggedSequentialEvent([], tag=tag)
 
 
-@register_solver
+@register_decoder
 def sim(tag=None):
     return core_events.TaggedSimultaneousEvent([], tag=tag)

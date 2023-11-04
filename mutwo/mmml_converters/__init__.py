@@ -22,8 +22,8 @@ where $block is
     $mmmlexpressionN
 
 Each expression is solved into a :class:`mutwo.core_events.abc.Event`.
-Solvers are responsible for the conversion. Solvers are defined with
-:func:`mutwo.mmml_converters.register_solver`.
+Decoders are responsible for the conversion. Decoders are defined with
+:func:`mutwo.mmml_converters.register_decoder`.
 
 **Example of a MMML expression:**
 
@@ -43,5 +43,5 @@ seq melody
 
 from . import constants
 
-from .solvers import *
-from .mmml import *
+from .decoders import *
+from .frontends import *
