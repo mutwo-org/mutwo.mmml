@@ -43,5 +43,6 @@ seq melody
 
 from . import constants
 
-from .decoders import *
+from .codes import *
 from .frontends import *
+from .backends import *

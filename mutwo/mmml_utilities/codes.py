@@ -1,9 +1,10 @@
 import typing
 
 from mutwo import core_utilities
+from mutwo import mmml_utilities
 
 
-__all__ = ("DecoderRegistry",)
+__all__ = ("DecoderRegistry", "EncoderRegistry")
 
 
 class DecoderRegistry(object):
@@ -26,7 +27,9 @@ class DecoderRegistry(object):
     ):
         name = name or function.__name__
         if name in self:
-            self._logger.warning(f"Decoder '{name}' already exists and is overridden now.")
+            self._logger.warning(
+                f"Decoder '{name}' already exists and is overridden now."
+            )
         self.__decoder_dict[name] = self._wrap_decoder(name, function)
 
     def _wrap_decoder(self, decoder_name: str, function: typing.Callable):
@@ -41,6 +44,7 @@ class DecoderRegistry(object):
                 {{! the previous NoteLike set it as its default. }}
                 n 1/1 c
         """
+
         def _(*args):
             self._set_decoder_default_args(decoder_name, args)
             args = self._get_decoder_default_args(decoder_name, args)
@@ -68,3 +72,30 @@ class DecoderRegistry(object):
         for i in range(diff):
             arg_list.append(present_default[arg_count + i])
         return tuple(arg_list)
+
+
+class EncoderRegistry(object):
+    def __init__(self):
+        self._logger = core_utilities.get_cls_logger(type(self))
+        self.__encoder_dict = {}
+
+    def __getitem__(self, key):
+        try:
+            return self.__encoder_dict[key]
+        except KeyError:
+            raise mmml_utilities.NoEncoderExists(key)
+
+    def __contains__(self, obj: typing.Any) -> bool:
+        return obj in self.__encoder_dict
+
+    def register_encoder(self, *encoding_type):
+        def _(function):
+            for t in encoding_type:
+                if t in self.__encoder_dict:
+                    self._logger.warning(
+                        f"Encoder for '{t}' already exists and "
+                        "is overridden now."
+                    )
+                self.__encoder_dict[t] = function
+
+        return _

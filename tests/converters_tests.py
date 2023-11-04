@@ -20,9 +20,7 @@ class MMMLExpressionToEventTest(unittest.TestCase):
         """Test that usage of mustache template language is supported"""
 
         # Comments
-        self.assertTrue(
-            self.c("{{! this is a comment }}\n" "n\n" "{{! comment2 }}")
-        )
+        self.assertTrue(self.c("{{! this is a comment }}\n" "n\n" "{{! comment2 }}"))
 
     def test_multiple_expressions(self):
         """Test that only one MMML expression is allowed per string"""
@@ -114,3 +112,31 @@ class MMMLExpressionToEventTest(unittest.TestCase):
 
         # Set tag
         self.assertEqual(sim(tag="abc"), self.c("sim abc"))
+
+
+class EventToMMMLExpressionTest(unittest.TestCase):
+    def setUp(self):
+        self.c = mmml_converters.EventToMMMLExpression()
+
+    def test_note_like(self):
+        self.assertEqual(self.c(n("c", "1/4", "ff")), "n 1/4 c4 ff")
+
+    def test_rest(self):
+        self.assertEqual(self.c(n()), "r 1")
+        self.assertEqual(self.c(n([], "5/4")), "r 5/4")
+
+    def test_sequential_event(self):
+        self.assertEqual(self.c(seq()), "seq\n")
+        self.assertEqual(self.c(seq(tag="abc")), "seq abc\n")
+        self.assertEqual(self.c(seq([n(), n()])), "seq\n    r 1\n    r 1")
+        self.assertEqual(
+            self.c(seq([n(), seq([n()])])), "seq\n    r 1\n    seq\n        r 1"
+        )
+
+    def test_simultaneous_event(self):
+        self.assertEqual(self.c(sim()), "sim\n")
+        self.assertEqual(self.c(sim(tag="abc")), "sim abc\n")
+        self.assertEqual(self.c(sim([n(), n()])), "sim\n    r 1\n    r 1")
+        self.assertEqual(
+            self.c(sim([n(), sim([n()])])), "sim\n    r 1\n    sim\n        r 1"
+        )
