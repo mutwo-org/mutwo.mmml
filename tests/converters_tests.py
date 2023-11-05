@@ -128,15 +128,15 @@ class EventToMMMLExpressionTest(unittest.TestCase):
     def test_sequential_event(self):
         self.assertEqual(self.c(seq()), "seq\n")
         self.assertEqual(self.c(seq(tag="abc")), "seq abc\n")
-        self.assertEqual(self.c(seq([n(), n()])), "seq\n    r 1\n    r 1")
+        self.assertEqual(self.c(seq([n(), n()])), "seq\n\n    r 1\n    r 1\n")
         self.assertEqual(
-            self.c(seq([n(), seq([n()])])), "seq\n    r 1\n    seq\n        r 1"
+            self.c(seq([n(), seq([n()])])), "seq\n\n    r 1\n    seq\n\n        r 1\n\n"
         )
 
     def test_simultaneous_event(self):
         self.assertEqual(self.c(sim()), "sim\n")
         self.assertEqual(self.c(sim(tag="abc")), "sim abc\n")
-        self.assertEqual(self.c(sim([n(), n()])), "sim\n    r 1\n    r 1")
+        self.assertEqual(self.c(sim([n(), n()])), "sim\n\n    r 1\n    r 1\n")
         self.assertEqual(
-            self.c(sim([n(), sim([n()])])), "sim\n    r 1\n    sim\n        r 1"
+            self.c(sim([n(), sim([n()])])), "sim\n\n    r 1\n    sim\n\n        r 1\n\n"
         )

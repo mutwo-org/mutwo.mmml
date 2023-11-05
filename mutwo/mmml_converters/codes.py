@@ -91,9 +91,13 @@ def simultaneous_event(
 
 
 def _complex_event_to_block(complex_event: core_events.abc.ComplexEvent) -> str:
-    block = []
+    if not complex_event:
+        return ""
+    block = [""]
     for e in complex_event:
         expression = mmml_converters.encode_event(e)
         for line in expression.split("\n"):
-            block.append(f"{mmml_converters.constants.INDENTATION}{line}")
+            line = f"{mmml_converters.constants.INDENTATION}{line}" if line else line
+            block.append(line)
+    block.append("")
     return "\n".join(block)
