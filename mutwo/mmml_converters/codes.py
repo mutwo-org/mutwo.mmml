@@ -1,3 +1,5 @@
+import typing
+
 from mutwo import core_events
 from mutwo import mmml_converters
 from mutwo import music_events
@@ -10,9 +12,12 @@ __all__ = ("register_decoder", "register_encoder")
 register_decoder = mmml_converters.constants.DECODER_REGISTRY.register_decoder
 register_encoder = mmml_converters.constants.ENCODER_REGISTRY.register_encoder
 
+EventTuple: typing.TypeAlias = tuple[core_events.abc.Event, ...]
+
 
 @register_decoder
 def n(
+    event_tuple: EventTuple,
     duration=1,
     pitch="",
     volume="mf",
@@ -35,27 +40,32 @@ def n(
     return music_events.NoteLike(
         pitch,
         duration,
-        volume,
+        volume=volume,
         playing_indicator_collection=playing_indicator_collection,
         notation_indicator_collection=notation_indicator_collection,
         lyric=lyric,
         instrument_list=instrument_list,
+        grace_note_sequential_event=core_events.SequentialEvent(event_tuple),
     )
 
 
 @register_decoder
-def r(duration=1, *args):
-    return music_events.NoteLike([], duration, *args)
+def r(event_tuple: EventTuple, duration=1):
+    return music_events.NoteLike(
+        [],
+        duration,
+        grace_note_sequential_event=core_events.SequentialEvent(event_tuple),
+    )
 
 
 @register_decoder
-def seq(tag=None):
-    return core_events.TaggedSequentialEvent([], tag=tag)
+def seq(event_tuple: EventTuple, tag=None):
+    return core_events.TaggedSequentialEvent(event_tuple, tag=tag)
 
 
 @register_decoder
-def sim(tag=None):
-    return core_events.TaggedSimultaneousEvent([], tag=tag)
+def sim(event_tuple: EventTuple, tag=None):
+    return core_events.TaggedSimultaneousEvent(event_tuple, tag=tag)
 
 
 @register_encoder(music_events.NoteLike)

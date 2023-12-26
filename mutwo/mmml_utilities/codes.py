@@ -1,5 +1,6 @@
 import typing
 
+from mutwo import core_events
 from mutwo import core_utilities
 from mutwo import mmml_utilities
 
@@ -8,6 +9,10 @@ __all__ = ("DecoderRegistry", "EncoderRegistry")
 
 
 class DecoderRegistry(object):
+    Decoder: typing.TypeAlias = typing.Callable[
+        [typing.Any, ...], core_events.abc.Event
+    ]
+
     def __init__(self):
         self._logger = core_utilities.get_cls_logger(type(self))
         self.__decoder_dict = {}
@@ -22,9 +27,7 @@ class DecoderRegistry(object):
     def reset_defaults(self):
         self.__decoder_default_dict = {}
 
-    def register_decoder(
-        self, function: typing.Callable, name: typing.Optional[str] = None
-    ):
+    def register_decoder(self, function: Decoder, name: typing.Optional[str] = None):
         name = name or function.__name__
         if name in self:
             self._logger.warning(
@@ -93,8 +96,7 @@ class EncoderRegistry(object):
             for t in encoding_type:
                 if t in self.__encoder_dict:
                     self._logger.warning(
-                        f"Encoder for '{t}' already exists and "
-                        "is overridden now."
+                        f"Encoder for '{t}' already exists and " "is overridden now."
                     )
                 self.__encoder_dict[t] = function
 

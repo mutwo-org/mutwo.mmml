@@ -56,9 +56,13 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
 
 def process_expression(expression: str) -> core_events.abc.Event:
     header, block = _split_to_header_and_block(expression)
-    event = process_header(header)
-    process_block(block, event)
-    return event
+    expression_name, arguments = process_header(header)
+    event_tuple = process_block(block)
+    try:
+        decoder = mmml_converters.constants.DECODER_REGISTRY[expression_name]
+    except KeyError:
+        raise mmml_utilities.NoDecoderExists(expression_name)
+    return decoder(event_tuple, *arguments)
 
 
 def _split_to_header_and_block(expression: str):
@@ -70,10 +74,22 @@ def _split_to_header_and_block(expression: str):
     return header, block
 
 
-def process_block(block: str, event: core_events.abc.ComplexEvent):
+ExpressionName: typing.TypeAlias = str
+HeaderArguments: typing.TypeAlias = tuple[typing.Any, ...]
+
+
+def process_header(header: str) -> tuple[ExpressionName, HeaderArguments]:
+    data = []
+    for n in header.split(" "):
+        if n:
+            data.extend(n.split("\t"))
+    expression_name, *arguments = filter(bool, data)
+    return expression_name, arguments
+
+
+def process_block(block: str) -> tuple[core_events.abc.Event, ...]:
     expression_tuple = _split_to_expression_tuple(block)
-    for expression in expression_tuple:
-        event.append(process_expression(expression))
+    return tuple(process_expression(e) for e in expression_tuple)
 
 
 def _split_to_expression_tuple(mmml: str) -> tuple[list[str], ...]:
@@ -102,16 +118,3 @@ def _split_to_expression_tuple(mmml: str) -> tuple[list[str], ...]:
     if expression_line_list:
         expression_list.append(expression_line_list)
     return tuple("\n".join(e) for e in expression_list)
-
-
-def process_header(header: str) -> core_events.abc.Event:
-    data = []
-    for n in header.split(" "):
-        if n:
-            data.extend(n.split("\t"))
-    expression_name, *arguments = filter(bool, data)
-    try:
-        decoder = mmml_converters.constants.DECODER_REGISTRY[expression_name]
-    except KeyError:
-        raise mmml_utilities.NoDecoderExists(expression_name)
-    return decoder(*arguments)

@@ -77,6 +77,23 @@ class MMMLExpressionToEventTest(unittest.TestCase):
         # Set volume
         self.assertEqual(n("c4", volume="f"), self.c("n 1 c4 f"))
 
+        # Set grace notes
+        mmml = """
+n 1 c4 mf
+    n 1/4 c4 mf
+    n 1/4 d4 mf
+"""
+        self.assertEqual(
+            self.c(mmml),
+            n(
+                "c4",
+                duration=1,
+                grace_note_sequential_event=core_events.SequentialEvent(
+                    [n("c", "1/4"), n("d", "1/4")]
+                ),
+            ),
+        )
+
     def test_decoder_r(self):
         """Test that builtin decoder 'r' returns NoteLike with correct attr"""
 
