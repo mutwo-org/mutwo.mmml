@@ -12,7 +12,18 @@ register_encoder = mmml_converters.constants.ENCODER_REGISTRY.register_encoder
 
 
 @register_decoder
-def n(duration=1, pitch="", *args):
+def n(
+    duration=1,
+    pitch="",
+    volume="mf",
+    # We use a different order than in 'NoteLike.__init__', because
+    # we can't provide grace or after grace notes in the MMML header,
+    # therefore we skip them.
+    playing_indicator_collection=None,
+    notation_indicator_collection=None,
+    lyric=music_parameters.DirectLyric(""),
+    instrument_list=[],
+):
     # In mutwo.music we simply use space for separating between
     # multiple pitches. In a MMML expression this isn't possible,
     # as space indicates a new parameter. So we use commas in MMML,
@@ -21,7 +32,15 @@ def n(duration=1, pitch="", *args):
     # mutwo.music <0.26.0 bug: Empty string raises an exception.
     if not pitch:
         pitch = []
-    return music_events.NoteLike(pitch, duration, *args)
+    return music_events.NoteLike(
+        pitch,
+        duration,
+        volume,
+        playing_indicator_collection=playing_indicator_collection,
+        notation_indicator_collection=notation_indicator_collection,
+        lyric=lyric,
+        instrument_list=instrument_list,
+    )
 
 
 @register_decoder
