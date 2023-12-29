@@ -13,8 +13,7 @@ sim = core_events.TaggedSimultaneousEvent
 class MMMLExpressionToEventTest(unittest.TestCase):
     def setUp(self):
         self.c = mmml_converters.MMMLExpressionToEvent()
-        self.reset = mmml_converters.constants.DECODER_REGISTRY.reset_defaults
-        self.reset()
+        self.reset = self.c.reset_defaults
 
     def test_mustache(self):
         """Test that usage of mustache template language is supported"""
