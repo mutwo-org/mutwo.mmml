@@ -50,10 +50,28 @@ def n(
 
 
 @register_decoder
-def r(event_tuple: EventTuple, duration=1):
+def r(
+    event_tuple: EventTuple,
+    duration=1,
+    # Also add other parameters to rest, because sometimes it's necessary that
+    # a rest also has notation or playing indicators
+    volume="mf",
+    # We use a different order than in 'NoteLike.__init__', because
+    # we can't provide grace or after grace notes in the MMML header,
+    # therefore we skip them.
+    playing_indicator_collection=None,
+    notation_indicator_collection=None,
+    lyric=music_parameters.DirectLyric(""),
+    instrument_list=[],
+):
     return music_events.NoteLike(
         [],
         duration,
+        volume=volume,
+        playing_indicator_collection=playing_indicator_collection,
+        notation_indicator_collection=notation_indicator_collection,
+        lyric=lyric,
+        instrument_list=instrument_list,
         grace_note_sequential_event=core_events.SequentialEvent(event_tuple),
     )
 
