@@ -1,7 +1,6 @@
 from mutwo import core_converters
 from mutwo import core_events
 from mutwo import mmml_converters
-from mutwo import mmml_utilities
 
 __all__ = ("EventToMMMLExpression", "encode_event")
 
