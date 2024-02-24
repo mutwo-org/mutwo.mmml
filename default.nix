@@ -1,28 +1,10 @@
-{ sources ? import ./nix/sources.nix, rsources ? import (sources.mutwo-nix.outPath + "/nix/sources.nix"), pkgs ? import rsources.nixpkgs {}}:
-
-with pkgs;
-with pkgs.python310Packages;
-
 let
-
-  mutwo-music = import (sources.mutwo-nix.outPath + "/mutwo.music/default.nix") {};
-
+  sourcesTarball = fetchTarball "https://github.com/mutwo-org/mutwo-nix/archive/refs/heads/main.tar.gz";
+  mutwo-mmml = import (sourcesTarball + "/mutwo.mmml/default.nix") {};
+  mutwo-mmml-local = mutwo-mmml.overrideAttrs (
+    finalAttrs: previousAttrs: {
+       src = ./.;
+    }
+  );
 in
-
-  buildPythonPackage rec {
-    name = "mutwo.mmml";
-    src = ./.;
-    nativeCheckInputs = [ pytest ];
-    checkInputs = [ pytest ];
-    propagatedBuildInputs = [ 
-      mutwo-music
-      chevron
-    ];
-    checkPhase = ''
-      runHook preCheck
-      # pytest
-      # pytest --doctest-modules mutwo
-      runHook postCheck
-    '';
-    doCheck = true;
-  }
+  mutwo-mmml-local
