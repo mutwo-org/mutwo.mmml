@@ -151,11 +151,14 @@ class EventToMMMLExpressionTest(unittest.TestCase):
         )
 
         note = n("c", "1/4", "ff")
-        note.notation_indicator_collection.clef.name = 'bass'
+        note.notation_indicator_collection.clef.name = "bass"
 
-        self.assertEqual(
-            self.c(note), "n 1/4 c4 ff _ clef.name=bass"
-        )
+        self.assertEqual(self.c(note), "n 1/4 c4 ff _ clef.name=bass")
+
+    def test_note_like_with_grace_note_sequential_event(self):
+        note = n("d", "1/4", "p")
+        note.grace_note_sequential_event.append(n("c", "1/4", "p"))
+        self.assertEqual(self.c(note), "n 1/4 d4 p _ _\n\n    n 1/4 c4 p _ _\n")
 
     def test_note_like_just_intonation_pitch_1_1(self):
         """Ensure 1/1 JI pitch is rendered as '1/1' and not as '1',

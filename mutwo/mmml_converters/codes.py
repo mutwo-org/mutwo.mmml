@@ -89,14 +89,23 @@ def sim(event_tuple: EventTuple, tag=None):
 @register_encoder(music_events.NoteLike)
 def note_like(n: music_events.NoteLike):
     d = str(n.duration.duration)
+
     pic = _parse_indicator_collection(n.playing_indicator_collection)
     nic = _parse_indicator_collection(n.notation_indicator_collection)
+
     if n.pitch_list:
         p = ",".join([_parse_pitch(p) for p in n.pitch_list])
         v = _parse_volume(n.volume)
-        return f"n {d} {p} {v} {pic} {nic}"
+        header = f"n {d} {p} {v} {pic} {nic}"
     else:
-        return f"r {d} {pic} {nic}"
+        header = f"r {d} {pic} {nic}"
+
+    if n.grace_note_sequential_event:
+        block = "\n" + _complex_event_to_block(n.grace_note_sequential_event)
+    else:
+        block = ""
+
+    return f"{header}{block}"
 
 
 def _parse_pitch(pitch: music_parameters.abc.Pitch):
