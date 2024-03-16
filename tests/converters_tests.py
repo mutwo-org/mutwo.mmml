@@ -129,6 +129,11 @@ n 1 c4 mf
         # Set tag
         self.assertEqual(sim(tag="abc"), self.c("sim abc"))
 
+    def test_empty_argument(self):
+        """Ensure that MMML takes the decoders default value if magic '_' is given as an argument"""
+        self.assertEqual(n(volume="pppp"), self.c("n _ _ pppp"))
+        self.assertEqual(n(volume="pppp", duration="5/4"), self.c("n 5/4 _ pppp"))
+
 
 class EventToMMMLExpressionTest(unittest.TestCase):
     def setUp(self):

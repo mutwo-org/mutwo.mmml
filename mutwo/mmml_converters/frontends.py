@@ -35,8 +35,11 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
 
     def __init__(self, use_defaults: bool = False):
         self._use_defaults = False
+
         self._wrapped_decoder_dict = {}
+
         self.__decoder_default_dict = {}
+        self.__decoder_varnames_dict = {}
 
     def reset_defaults(self):
         self.__decoder_default_dict = {}
@@ -104,13 +107,25 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
                 n 1/1 c
         """
 
+        varnames = function.__code__.co_varnames
+        self.__decoder_varnames_dict[decoder_name] = varnames
+
         def _(*args):
             if self._use_defaults:
                 self._set_decoder_default_args(decoder_name, args)
                 args = self._get_decoder_default_args(decoder_name, args)
-            return function(*args)
+            kwargs = self._args_to_kwargs(decoder_name, args)
+            return function(**kwargs)
 
         return _
+
+    def _args_to_kwargs(self, decoder_name: str, args: tuple) -> dict:
+        varnames = self.__decoder_varnames_dict[decoder_name]
+        return {
+            name: arg
+            for name, arg in zip(varnames, args)
+            if arg != mmml_converters.constants.IGNORE_MAGIC
+        }
 
     def _set_decoder_default_args(self, decoder_name: str, args: tuple):
         """Set currently defined arguments as new default values for decoder"""
@@ -138,7 +153,9 @@ def _split_to_header_and_block(expression: str):
     header, block = None, expression
     while not header:
         if not block:
-            raise mmml_utilities.MalformedMMML(f"No MMML expression found in expression '{expression}'")
+            raise mmml_utilities.MalformedMMML(
+                f"No MMML expression found in expression '{expression}'"
+            )
         header, _, block = block.partition("\n")
     return header, block
 
