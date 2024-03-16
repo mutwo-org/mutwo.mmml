@@ -140,30 +140,47 @@ class EventToMMMLExpressionTest(unittest.TestCase):
         self.c = mmml_converters.EventToMMMLExpression()
 
     def test_note_like(self):
-        self.assertEqual(self.c(n("c", "1/4", "ff")), "n 1/4 c4 ff")
+        self.assertEqual(self.c(n("c", "1/4", "ff")), "n 1/4 c4 ff _ _")
+
+    def test_note_like_with_indicator_collection(self):
+        note = n("c", "1/4", "ff")
+        note.playing_indicator_collection.fermata.type = "fermata"
+        note.playing_indicator_collection.arpeggio.direction = "up"
+        self.assertEqual(
+            self.c(note), "n 1/4 c4 ff arpeggio.direction=up;fermata.type=fermata _"
+        )
+
+        note = n("c", "1/4", "ff")
+        note.notation_indicator_collection.clef.name = 'bass'
+
+        self.assertEqual(
+            self.c(note), "n 1/4 c4 ff _ clef.name=bass"
+        )
 
     def test_note_like_just_intonation_pitch_1_1(self):
         """Ensure 1/1 JI pitch is rendered as '1/1' and not as '1',
         because otherwise the 'MMMLExpressionToEvent' converter
         won't be able to re-load the MMML expression."""
-        self.assertEqual(self.c(n("1/1", "1/4", "ff")), "n 1/4 1/1 ff")
+        self.assertEqual(self.c(n("1/1", "1/4", "ff")), "n 1/4 1/1 ff _ _")
 
     def test_rest(self):
-        self.assertEqual(self.c(n()), "r 1")
-        self.assertEqual(self.c(n([], "5/4")), "r 5/4")
+        self.assertEqual(self.c(n()), "r 1 _ _")
+        self.assertEqual(self.c(n([], "5/4")), "r 5/4 _ _")
 
     def test_sequential_event(self):
         self.assertEqual(self.c(seq()), "seq\n")
         self.assertEqual(self.c(seq(tag="abc")), "seq abc\n")
-        self.assertEqual(self.c(seq([n(), n()])), "seq\n\n    r 1\n    r 1\n")
+        self.assertEqual(self.c(seq([n(), n()])), "seq\n\n    r 1 _ _\n    r 1 _ _\n")
         self.assertEqual(
-            self.c(seq([n(), seq([n()])])), "seq\n\n    r 1\n    seq\n\n        r 1\n\n"
+            self.c(seq([n(), seq([n()])])),
+            "seq\n\n    r 1 _ _\n    seq\n\n        r 1 _ _\n\n",
         )
 
     def test_simultaneous_event(self):
         self.assertEqual(self.c(sim()), "sim\n")
         self.assertEqual(self.c(sim(tag="abc")), "sim abc\n")
-        self.assertEqual(self.c(sim([n(), n()])), "sim\n\n    r 1\n    r 1\n")
+        self.assertEqual(self.c(sim([n(), n()])), "sim\n\n    r 1 _ _\n    r 1 _ _\n")
         self.assertEqual(
-            self.c(sim([n(), sim([n()])])), "sim\n\n    r 1\n    sim\n\n        r 1\n\n"
+            self.c(sim([n(), sim([n()])])),
+            "sim\n\n    r 1 _ _\n    sim\n\n        r 1 _ _\n\n",
         )

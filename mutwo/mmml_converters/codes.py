@@ -89,12 +89,14 @@ def sim(event_tuple: EventTuple, tag=None):
 @register_encoder(music_events.NoteLike)
 def note_like(n: music_events.NoteLike):
     d = str(n.duration.duration)
+    pic = _parse_indicator_collection(n.playing_indicator_collection)
+    nic = _parse_indicator_collection(n.notation_indicator_collection)
     if n.pitch_list:
         p = ",".join([_parse_pitch(p) for p in n.pitch_list])
         v = _parse_volume(n.volume)
-        return f"n {d} {p} {v}"
+        return f"n {d} {p} {v} {pic} {nic}"
     else:
-        return f"r {d}"
+        return f"r {d} {pic} {nic}"
 
 
 def _parse_pitch(pitch: music_parameters.abc.Pitch):
@@ -121,6 +123,21 @@ def _parse_volume(volume: music_parameters.abc.Volume):
             return volume.name
         case _:
             raise NotImplementedError()
+
+
+def _parse_indicator_collection(indicator_collection):
+    mmml = ""
+    for name, indicator in indicator_collection.get_indicator_dict().items():
+        if indicator.is_active:
+            # XXX: This needs to be fixed in 'mutwo.music':
+            # ottava with 'octave_count=0' must be inactive.
+            if getattr(indicator, "octave_count", None) == 0:
+                continue
+            for k, v in indicator.get_arguments_dict().items():
+                if mmml:
+                    mmml += ";"
+                mmml += f"{name}.{k}={v}"
+    return mmml or mmml_converters.constants.IGNORE_MAGIC
 
 
 @register_encoder(core_events.SequentialEvent, core_events.TaggedSequentialEvent)
