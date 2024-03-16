@@ -137,6 +137,12 @@ class EventToMMMLExpressionTest(unittest.TestCase):
     def test_note_like(self):
         self.assertEqual(self.c(n("c", "1/4", "ff")), "n 1/4 c4 ff")
 
+    def test_note_like_just_intonation_pitch_1_1(self):
+        """Ensure 1/1 JI pitch is rendered as '1/1' and not as '1',
+        because otherwise the 'MMMLExpressionToEvent' converter
+        won't be able to re-load the MMML expression."""
+        self.assertEqual(self.c(n("1/1", "1/4", "ff")), "n 1/4 1/1 ff")
+
     def test_rest(self):
         self.assertEqual(self.c(n()), "r 1")
         self.assertEqual(self.c(n([], "5/4")), "r 5/4")

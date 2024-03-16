@@ -104,7 +104,13 @@ def _parse_pitch(pitch: music_parameters.abc.Pitch):
         case music_parameters.ScalePitch():
             return str(pitch.scale_degree + 1)
         case music_parameters.JustIntonationPitch():
-            return str(pitch.ratio)
+            r = str(pitch.ratio)
+            # Ensure we always render ratios with '/', otherwise
+            # the pitch parser of 'mutwo.music' won't be able to
+            # re-load them.
+            if "/" not in r:
+                r = f"{r}/1"
+            return r
         case _:
             raise NotImplementedError(pitch)
 
