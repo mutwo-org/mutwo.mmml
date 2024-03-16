@@ -12,7 +12,7 @@ sim = core_events.TaggedSimultaneousEvent
 
 class MMMLExpressionToEventTest(unittest.TestCase):
     def setUp(self):
-        self.c = mmml_converters.MMMLExpressionToEvent()
+        self.c = mmml_converters.MMMLExpressionToEvent(use_defaults=True)
         self.reset = self.c.reset_defaults
 
     def test_mustache(self):

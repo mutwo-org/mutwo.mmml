@@ -33,7 +33,8 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
     TaggedSequentialEvent([NoteLike(duration = DirectDuration(duration = 1/4), instrument_list = [], lyric = DirectLyric(phonetic_representation = ), pitch_list = [WesternPitch('c', 4)], tempo_envelope = TempoEnvelope([TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 1), tempo_point = DirectTempoPoint(BPM = 60, reference = 1)), TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 0), tempo_point = DirectTempoPoint(BPM = 60, reference = 1))]), volume = WesternVolume(amplitude = 0.12328467394420653)), NoteLike(duration = DirectDuration(duration = 1/8), instrument_list = [], lyric = DirectLyric(phonetic_representation = ), pitch_list = [WesternPitch('d', 4)], tempo_envelope = TempoEnvelope([TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 1), tempo_point = DirectTempoPoint(BPM = 60, reference = 1)), TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 0), tempo_point = DirectTempoPoint(BPM = 60, reference = 1))]), volume = WesternVolume(amplitude = 0.28480358684358004)), NoteLike(duration = DirectDuration(duration = 1/8), instrument_list = [], lyric = DirectLyric(phonetic_representation = ), pitch_list = [WesternPitch('e', 4)], tempo_envelope = TempoEnvelope([TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 1), tempo_point = DirectTempoPoint(BPM = 60, reference = 1)), TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 0), tempo_point = DirectTempoPoint(BPM = 60, reference = 1))]), volume = WesternVolume(amplitude = 0.28480358684358004)), NoteLike(duration = DirectDuration(duration = 1/2), instrument_list = [], lyric = DirectLyric(phonetic_representation = ), pitch_list = [WesternPitch('d', 4)], tempo_envelope = TempoEnvelope([TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 1), tempo_point = DirectTempoPoint(BPM = 60, reference = 1)), TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 0), tempo_point = DirectTempoPoint(BPM = 60, reference = 1))]), volume = WesternVolume(amplitude = 0.28480358684358004))])
     """
 
-    def __init__(self):
+    def __init__(self, use_defaults: bool = False):
+        self._use_defaults = False
         self._wrapped_decoder_dict = {}
         self.__decoder_default_dict = {}
 
@@ -104,8 +105,9 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
         """
 
         def _(*args):
-            self._set_decoder_default_args(decoder_name, args)
-            args = self._get_decoder_default_args(decoder_name, args)
+            if self._use_defaults:
+                self._set_decoder_default_args(decoder_name, args)
+                args = self._get_decoder_default_args(decoder_name, args)
             return function(*args)
 
         return _
