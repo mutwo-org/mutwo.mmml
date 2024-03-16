@@ -136,7 +136,7 @@ def _split_to_header_and_block(expression: str):
     header, block = None, expression
     while not header:
         if not block:
-            raise mmml_utilities.MalformedMMML("No MMML expression found")
+            raise mmml_utilities.MalformedMMML(f"No MMML expression found in expression '{expression}'")
         header, _, block = block.partition("\n")
     return header, block
 
