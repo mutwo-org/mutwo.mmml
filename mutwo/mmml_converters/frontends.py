@@ -67,6 +67,7 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
         return self._process_expression(e)
 
     def _process_expression(self, expression: str) -> core_events.abc.Event:
+        expression = _drop_comments(expression)
         header, block = _split_to_header_and_block(expression)
         expression_name, arguments = self._process_header(header)
         event_tuple = self._process_block(block)
@@ -186,3 +187,11 @@ def _split_to_expression_tuple(mmml: str) -> tuple[list[str], ...]:
     if expression_line_list:
         expression_list.append(expression_line_list)
     return tuple("\n".join(e) for e in expression_list)
+
+
+def _drop_comments(expression: str):
+    def is_not_comment(line):
+        sline = line.strip()
+        return not (sline and sline[0] == mmml_converters.constants.COMMENT_MAGIC)
+
+    return "\n".join(filter(is_not_comment, expression.split("\n")))

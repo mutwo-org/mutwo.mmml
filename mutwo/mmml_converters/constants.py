@@ -7,5 +7,8 @@ INDENTATION = r"    "
 IGNORE_MAGIC = r"_"
 """If this is used as an argument, it is ignored"""
 
+COMMENT_MAGIC = r"#"
+"""All lines starting with this character are ignored."""
+
 
 del mmml_utilities

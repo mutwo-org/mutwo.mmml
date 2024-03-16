@@ -57,6 +57,18 @@ class MMMLExpressionToEventTest(unittest.TestCase):
         # line in between
         self.assertEqual(seq([n(), n()]), self.c("seq\n\n\n    n\n\n\n    n"))
 
+    def test_ignore_comments(self):
+        mmml = """
+# this is a comment
+
+             # this is a comment
+# this is also a comment
+seq
+
+    # this is also a comment
+"""
+        self.assertEqual(self.c(mmml), core_events.TaggedSequentialEvent())
+
     def test_decoder_n(self):
         """Test that builtin decoder 'n' returns NoteLike with correct attr"""
 

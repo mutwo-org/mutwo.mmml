@@ -26,25 +26,26 @@ MMML expressions represent exactly one mutwo event.
 But the event can be nested:
 
 ```
-{{! We can write comments using mustache. }}
-{{! (We can also add variables using mustache) }}
+# We can write comments when starting a line with '#'
 
-{{! Let's express one simultaneous event that contains our music. }}
+        # whitespace at the beggining is ignored for comments
+
+# Let's express one simultaneous event that contains our music.
 
 sim music
 
 
-    {{! It contains two sequences: a violin and a cello voice. }}
+    # It contains two sequences: a violin and a cello voice.
 
     seq violin
 
-        {{! 'n' is used to express a note. }}
+        # 'n' is used to express a note.
 
         n 1/4 a5 p
         n 1/4 bf5
         n 1/4 a5
 
-        {{! 'r' is used to express a rest. }}
+        # 'r' is used to express a rest.
 
         r 1/4
 
