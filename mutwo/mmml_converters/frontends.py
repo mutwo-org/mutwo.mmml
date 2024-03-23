@@ -21,7 +21,7 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
     **Example:**
 
     >>> from mutwo import mmml_converters
-    >>> c = mmml_converters.MMMLExpressionToEvent()
+    >>> c = mmml_converters.MMMLExpressionToEvent(use_defaults=True)
     >>> mmml = r'''
     ... seq my-melody
     ...     n 1/4 c
@@ -34,7 +34,7 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
     """
 
     def __init__(self, use_defaults: bool = False):
-        self._use_defaults = False
+        self._use_defaults = use_defaults
 
         self._wrapped_decoder_dict = {}
 
