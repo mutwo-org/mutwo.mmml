@@ -23,14 +23,14 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
     >>> from mutwo import mmml_converters
     >>> c = mmml_converters.MMMLExpressionToEvent(use_defaults=True)
     >>> mmml = r'''
-    ... seq my-melody
+    ... cns my-melody
     ...     n 1/4 c
     ...     n 1/8 d ff
     ...     n 1/8 e
     ...     n 1/2 d
     ... '''
     >>> c.convert(mmml)
-    TaggedSequentialEvent([NoteLike(duration = DirectDuration(duration = 1/4), instrument_list = [], lyric = DirectLyric(phonetic_representation = ), pitch_list = [WesternPitch('c', 4)], tempo_envelope = TempoEnvelope([TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 1), tempo_point = DirectTempoPoint(BPM = 60, reference = 1)), TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 0), tempo_point = DirectTempoPoint(BPM = 60, reference = 1))]), volume = WesternVolume(amplitude = 0.12328467394420653)), NoteLike(duration = DirectDuration(duration = 1/8), instrument_list = [], lyric = DirectLyric(phonetic_representation = ), pitch_list = [WesternPitch('d', 4)], tempo_envelope = TempoEnvelope([TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 1), tempo_point = DirectTempoPoint(BPM = 60, reference = 1)), TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 0), tempo_point = DirectTempoPoint(BPM = 60, reference = 1))]), volume = WesternVolume(amplitude = 0.28480358684358004)), NoteLike(duration = DirectDuration(duration = 1/8), instrument_list = [], lyric = DirectLyric(phonetic_representation = ), pitch_list = [WesternPitch('e', 4)], tempo_envelope = TempoEnvelope([TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 1), tempo_point = DirectTempoPoint(BPM = 60, reference = 1)), TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 0), tempo_point = DirectTempoPoint(BPM = 60, reference = 1))]), volume = WesternVolume(amplitude = 0.28480358684358004)), NoteLike(duration = DirectDuration(duration = 1/2), instrument_list = [], lyric = DirectLyric(phonetic_representation = ), pitch_list = [WesternPitch('d', 4)], tempo_envelope = TempoEnvelope([TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 1), tempo_point = DirectTempoPoint(BPM = 60, reference = 1)), TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 0), tempo_point = DirectTempoPoint(BPM = 60, reference = 1))]), volume = WesternVolume(amplitude = 0.28480358684358004))])
+    Consecution([NoteLike(duration=RatioDuration(0.25), instrument_list=[], lyric=DirectLyric(), pitch_list=[WesternPitch('c', 4)], tag=None, tempo=DirectTempo(60.0), volume=WesternVolume(mf)), NoteLike(duration=RatioDuration(0.125), instrument_list=[], lyric=DirectLyric(), pitch_list=[WesternPitch('d', 4)], tag=None, tempo=DirectTempo(60.0), volume=WesternVolume(ff)), NoteLike(duration=RatioDuration(0.125), instrument_list=[], lyric=DirectLyric(), pitch_list=[WesternPitch('e', 4)], tag=None, tempo=DirectTempo(60.0), volume=WesternVolume(ff)), NoteLike(duration=RatioDuration(0.5), instrument_list=[], lyric=DirectLyric(), pitch_list=[WesternPitch('d', 4)], tag=None, tempo=DirectTempo(60.0), volume=WesternVolume(ff))])
     """
 
     def __init__(self, use_defaults: bool = False):
@@ -61,7 +61,7 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
         >>> c = mmml_converters.MMMLExpressionToEvent()
         >>> expr = "n {{duration}} {{pitch}}"
         >>> c.convert(expr, duration='1/2', pitch='c')
-        NoteLike(duration = DirectDuration(duration = 1/2), instrument_list = [], lyric = DirectLyric(phonetic_representation = ), pitch_list = [WesternPitch('c', 4)], tempo_envelope = TempoEnvelope([TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 1), tempo_point = DirectTempoPoint(BPM = 60, reference = 1)), TempoEvent(curve_shape = 0, duration = DirectDuration(duration = 0), tempo_point = DirectTempoPoint(BPM = 60, reference = 1))]), volume = WesternVolume(amplitude = 0.12328467394420653))
+        NoteLike(duration=RatioDuration(0.5), instrument_list=[], lyric=DirectLyric(), pitch_list=[WesternPitch('c', 4)], tag=None, tempo=DirectTempo(60.0), volume=WesternVolume(mf))
         """
         e = chevron.render(expression, dict(**kwargs))
         return self._process_expression(e)

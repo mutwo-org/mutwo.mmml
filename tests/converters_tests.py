@@ -6,8 +6,8 @@ from mutwo import mmml_utilities
 from mutwo import music_events
 
 n = music_events.NoteLike
-seq = core_events.TaggedSequentialEvent
-sim = core_events.TaggedSimultaneousEvent
+cns = core_events.Consecution
+cnc = core_events.Concurrence
 
 
 class MMMLExpressionToEventTest(unittest.TestCase):
@@ -26,12 +26,12 @@ class MMMLExpressionToEventTest(unittest.TestCase):
 
         self.assertRaises(mmml_utilities.MalformedMMML, self.c, ("n\n" "n\n"))
         self.assertRaises(
-            mmml_utilities.MalformedMMML, self.c, ("seq\n" "    n\n" "n\n")
+            mmml_utilities.MalformedMMML, self.c, ("cns\n" "    n\n" "n\n")
         )
 
     def test_bad_indentation(self):
         """Test that bad indentation is forbidden"""
-        self.assertRaises(mmml_utilities.MalformedMMML, self.c, ("seq\n" "        n\n"))
+        self.assertRaises(mmml_utilities.MalformedMMML, self.c, ("cns\n" "        n\n"))
 
     def test_no_expression(self):
         """Test that no expression is forbidden"""
@@ -55,7 +55,7 @@ class MMMLExpressionToEventTest(unittest.TestCase):
         self.assertEqual(n(), self.c("n\n\n\n"))
 
         # line in between
-        self.assertEqual(seq([n(), n()]), self.c("seq\n\n\n    n\n\n\n    n"))
+        self.assertEqual(cns([n(), n()]), self.c("cns\n\n\n    n\n\n\n    n"))
 
     def test_ignore_comments(self):
         mmml = """
@@ -63,11 +63,11 @@ class MMMLExpressionToEventTest(unittest.TestCase):
 
              # this is a comment
 # this is also a comment
-seq
+cns
 
     # this is also a comment
 """
-        self.assertEqual(self.c(mmml), core_events.TaggedSequentialEvent())
+        self.assertEqual(self.c(mmml), core_events.Consecution())
 
     def test_decoder_n(self):
         """Test that builtin decoder 'n' returns NoteLike with correct attr"""
@@ -99,7 +99,7 @@ n 1 c4 mf
             n(
                 "c4",
                 duration=1,
-                grace_note_sequential_event=core_events.SequentialEvent(
+                grace_note_consecution=core_events.Consecution(
                     [n("c", "1/4"), n("d", "1/4")]
                 ),
             ),
@@ -114,32 +114,32 @@ n 1 c4 mf
         self.assertEqual(n(duration=2), self.c("r 2"))
         self.assertEqual(n(duration="1/4"), self.c("r 1/4"))
 
-    def test_decoder_seq(self):
-        """Test that builtin decoder 'seq' returns TaggedSequentialEvent"""
+    def test_decoder_cns(self):
+        """Test that builtin decoder 'cns' returns Consecution"""
 
-        self.assertEqual(seq(), self.c("seq"))
+        self.assertEqual(cns(), self.c("cns"))
 
         # Set tag
-        self.assertEqual(seq(tag="abc"), self.c("seq abc"))
-        self.assertEqual(seq(tag="100"), self.c("seq 100"))
+        self.assertEqual(cns(tag="abc"), self.c("cns abc"))
+        self.assertEqual(cns(tag="100"), self.c("cns 100"))
 
         self.reset()
 
         # Add children
-        self.assertEqual(seq([n(), n()]), self.c("seq\n" "    n\n" "    n"))
+        self.assertEqual(cns([n(), n()]), self.c("cns\n" "    n\n" "    n"))
         #  Nested children
         self.assertEqual(
-            seq([n(), seq([n()]), n()]),
-            self.c("seq\n" "    n\n" "    seq\n" "        n\n" "    n"),
+            cns([n(), cns([n()]), n()]),
+            self.c("cns\n" "    n\n" "    cns\n" "        n\n" "    n"),
         )
 
-    def test_decoder_sim(self):
-        """Test that builtin decoder 'sim' returns TaggedSimultaneousEvent"""
+    def test_decoder_cnc(self):
+        """Test that builtin decoder 'cnc' returns Concurrence"""
 
-        self.assertEqual(sim(), self.c("sim"))
+        self.assertEqual(cnc(), self.c("cnc"))
 
         # Set tag
-        self.assertEqual(sim(tag="abc"), self.c("sim abc"))
+        self.assertEqual(cnc(tag="abc"), self.c("cnc abc"))
 
     def test_empty_argument(self):
         """Ensure that MMML takes the decoders default value if magic '_' is given as an argument"""
@@ -167,9 +167,9 @@ class EventToMMMLExpressionTest(unittest.TestCase):
 
         self.assertEqual(self.c(note), "n 1/4 c4 ff _ clef.name=bass")
 
-    def test_note_like_with_grace_note_sequential_event(self):
+    def test_note_like_with_grace_note_consecution(self):
         note = n("d", "1/4", "p")
-        note.grace_note_sequential_event.append(n("c", "1/4", "p"))
+        note.grace_note_consecution.append(n("c", "1/4", "p"))
         self.assertEqual(self.c(note), "n 1/4 d4 p _ _\n\n    n 1/4 c4 p _ _\n")
 
     def test_note_like_just_intonation_pitch_1_1(self):
@@ -182,20 +182,20 @@ class EventToMMMLExpressionTest(unittest.TestCase):
         self.assertEqual(self.c(n()), "r 1 _ _")
         self.assertEqual(self.c(n([], "5/4")), "r 5/4 _ _")
 
-    def test_sequential_event(self):
-        self.assertEqual(self.c(seq()), "seq\n")
-        self.assertEqual(self.c(seq(tag="abc")), "seq abc\n")
-        self.assertEqual(self.c(seq([n(), n()])), "seq\n\n    r 1 _ _\n    r 1 _ _\n")
+    def test_consecution(self):
+        self.assertEqual(self.c(cns()), "cns\n")
+        self.assertEqual(self.c(cns(tag="abc")), "cns abc\n")
+        self.assertEqual(self.c(cns([n(), n()])), "cns\n\n    r 1 _ _\n    r 1 _ _\n")
         self.assertEqual(
-            self.c(seq([n(), seq([n()])])),
-            "seq\n\n    r 1 _ _\n    seq\n\n        r 1 _ _\n\n",
+            self.c(cns([n(), cns([n()])])),
+            "cns\n\n    r 1 _ _\n    cns\n\n        r 1 _ _\n\n",
         )
 
-    def test_simultaneous_event(self):
-        self.assertEqual(self.c(sim()), "sim\n")
-        self.assertEqual(self.c(sim(tag="abc")), "sim abc\n")
-        self.assertEqual(self.c(sim([n(), n()])), "sim\n\n    r 1 _ _\n    r 1 _ _\n")
+    def test_concurrence(self):
+        self.assertEqual(self.c(cnc()), "cnc\n")
+        self.assertEqual(self.c(cnc(tag="abc")), "cnc abc\n")
+        self.assertEqual(self.c(cnc([n(), n()])), "cnc\n\n    r 1 _ _\n    r 1 _ _\n")
         self.assertEqual(
-            self.c(sim([n(), sim([n()])])),
-            "sim\n\n    r 1 _ _\n    sim\n\n        r 1 _ _\n\n",
+            self.c(cnc([n(), cnc([n()])])),
+            "cnc\n\n    r 1 _ _\n    cnc\n\n        r 1 _ _\n\n",
         )

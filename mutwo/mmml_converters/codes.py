@@ -1,6 +1,7 @@
 import typing
 
 from mutwo import core_events
+from mutwo import core_parameters
 from mutwo import mmml_converters
 from mutwo import music_events
 from mutwo import music_parameters
@@ -45,7 +46,7 @@ def n(
         notation_indicator_collection=notation_indicator_collection,
         lyric=lyric,
         instrument_list=instrument_list,
-        grace_note_sequential_event=core_events.SequentialEvent(event_tuple),
+        grace_note_consecution=core_events.Consecution(event_tuple),
     )
 
 
@@ -72,23 +73,23 @@ def r(
         notation_indicator_collection=notation_indicator_collection,
         lyric=lyric,
         instrument_list=instrument_list,
-        grace_note_sequential_event=core_events.SequentialEvent(event_tuple),
+        grace_note_consecution=core_events.Consecution(event_tuple),
     )
 
 
 @register_decoder
-def seq(event_tuple: EventTuple, tag=None):
-    return core_events.TaggedSequentialEvent(event_tuple, tag=tag)
+def cns(event_tuple: EventTuple, tag=None):
+    return core_events.Consecution(event_tuple, tag=tag)
 
 
 @register_decoder
-def sim(event_tuple: EventTuple, tag=None):
-    return core_events.TaggedSimultaneousEvent(event_tuple, tag=tag)
+def cnc(event_tuple: EventTuple, tag=None):
+    return core_events.Concurrence(event_tuple, tag=tag)
 
 
 @register_encoder(music_events.NoteLike)
 def note_like(n: music_events.NoteLike):
-    d = str(n.duration.duration)
+    d = _parse_duration(n.duration)
 
     pic = _parse_indicator_collection(n.playing_indicator_collection)
     nic = _parse_indicator_collection(n.notation_indicator_collection)
@@ -100,12 +101,25 @@ def note_like(n: music_events.NoteLike):
     else:
         header = f"r {d} {pic} {nic}"
 
-    if n.grace_note_sequential_event:
-        block = "\n" + _complex_event_to_block(n.grace_note_sequential_event)
+    if n.grace_note_consecution:
+        block = "\n" + _compound_to_block(n.grace_note_consecution)
     else:
         block = ""
 
     return f"{header}{block}"
+
+
+def _parse_duration(duration: core_parameters.abc.Duration):
+    match duration:
+        case core_parameters.DirectDuration():
+            d = duration.beat_count
+            if (intd := int(d)) == float(d):
+                d = intd
+            return str(d)
+        case core_parameters.RatioDuration():
+            return str(duration.ratio)
+        case _:
+            raise NotImplementedError(duration)
 
 
 def _parse_pitch(pitch: music_parameters.abc.Pitch):
@@ -136,7 +150,7 @@ def _parse_volume(volume: music_parameters.abc.Volume):
 
 def _parse_indicator_collection(indicator_collection):
     mmml = ""
-    for name, indicator in indicator_collection.get_indicator_dict().items():
+    for name, indicator in indicator_collection.indicator_dict.items():
         if indicator.is_active:
             # XXX: This needs to be fixed in 'mutwo.music':
             # ottava with 'octave_count=0' must be inactive.
@@ -149,31 +163,31 @@ def _parse_indicator_collection(indicator_collection):
     return mmml or mmml_converters.constants.IGNORE_MAGIC
 
 
-@register_encoder(core_events.SequentialEvent, core_events.TaggedSequentialEvent)
-def sequential_event(
-    seq: core_events.SequentialEvent | core_events.TaggedSequentialEvent,
+@register_encoder(core_events.Consecution)
+def consecution(
+    cns: core_events.Consecution,
 ):
-    tag = getattr(seq, "tag", None)
-    header = f"seq {tag}" if tag else "seq"
-    block = _complex_event_to_block(seq)
+    tag = cns.tag
+    header = f"cns {tag}" if tag else "cns"
+    block = _compound_to_block(cns)
     return f"{header}\n{block}"
 
 
-@register_encoder(core_events.SimultaneousEvent, core_events.TaggedSimultaneousEvent)
-def simultaneous_event(
-    sim: core_events.SimultaneousEvent | core_events.TaggedSimultaneousEvent,
+@register_encoder(core_events.Concurrence)
+def concurrence(
+    cnc: core_events.Concurrence,
 ):
-    tag = getattr(sim, "tag", None)
-    header = f"sim {tag}" if tag else "sim"
-    block = _complex_event_to_block(sim)
+    tag = getattr(cnc, "tag", None)
+    header = f"cnc {tag}" if tag else "cnc"
+    block = _compound_to_block(cnc)
     return f"{header}\n{block}"
 
 
-def _complex_event_to_block(complex_event: core_events.abc.ComplexEvent) -> str:
-    if not complex_event:
+def _compound_to_block(compound: core_events.abc.Compound) -> str:
+    if not compound:
         return ""
     block = [""]
-    for e in complex_event:
+    for e in compound:
         expression = mmml_converters.encode_event(e)
         for line in expression.split("\n"):
             line = f"{mmml_converters.constants.INDENTATION}{line}" if line else line
