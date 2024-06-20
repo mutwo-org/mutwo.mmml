@@ -127,7 +127,7 @@ def _parse_pitch(pitch: music_parameters.abc.Pitch):
         case music_parameters.WesternPitch():
             return pitch.name
         case music_parameters.ScalePitch():
-            return str(pitch.scale_degree + 1)
+            return f"{pitch.scale_degree + 1}:{pitch.octave}"
         case music_parameters.JustIntonationPitch():
             r = str(pitch.ratio)
             # Ensure we always render ratios with '/', otherwise
