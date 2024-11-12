@@ -91,7 +91,7 @@ Same like `n`, but without the option to specify pitches.
 Besides the basic rules, MMML has a few extra rules to make using the language more convenient.
 They generally aim to be easily implementable and not making the language too complex.
 
-1. Empty lines are ignored. Empty means 'only white space' or 'nothing at all'.
+1. Empty lines are ignored. Empty means 'only white space or tabs' or 'nothing at all'.
 2. Any line, where the first character (that's not white space) is '#', is also ignored. Such a line is regarded as a comment.
 3. The special head argument `_` is always skipped. In this way it's possible to define for instance the fourth argument of an event [without necessarily having to declare all three previous arguments](https://github.com/mutwo-org/mutwo.mmml/commit/134ceda96986395887958946aaf4f1d253ade75a).
 

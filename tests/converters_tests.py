@@ -55,7 +55,10 @@ class MMMLExpressionToEventTest(unittest.TestCase):
         self.assertEqual(n(), self.c("n\n\n\n"))
 
         # line in between
-        self.assertEqual(cns([n(), n()]), self.c("cns\n\n\n    n\n\n\n    n"))
+        self.assertEqual(cns([n(), n()]), self.c("cns\n\n    n\n    \n    n"))
+
+        # empty but with tabs or space
+        self.assertEqual(cns(), self.c("cns\n    \n     \n\t\n\t  \t"))
 
     def test_ignore_comments(self):
         mmml = """

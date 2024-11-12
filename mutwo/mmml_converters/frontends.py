@@ -67,7 +67,7 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
         return self._process_expression(e)
 
     def _process_expression(self, expression: str) -> core_events.abc.Event:
-        expression = _drop_comments(expression)
+        expression = _drop_comments_and_empty_lines(expression)
         header, block = _split_to_header_and_block(expression)
         expression_name, arguments = self._process_header(header)
         event_tuple = self._process_block(block)
@@ -78,9 +78,9 @@ class MMMLExpressionToEvent(core_converters.abc.Converter):
                 decoder = mmml_converters.constants.DECODER_REGISTRY[expression_name]
             except KeyError:
                 raise mmml_utilities.NoDecoderExists(expression_name)
-            self._wrapped_decoder_dict[
-                expression_name
-            ] = wrapped_decoder = self._wrap_decoder(expression_name, decoder)
+            self._wrapped_decoder_dict[expression_name] = wrapped_decoder = (
+                self._wrap_decoder(expression_name, decoder)
+            )
         return wrapped_decoder(event_tuple, *arguments)
 
     def _process_header(self, header: str) -> tuple[ExpressionName, HeaderArguments]:
@@ -189,9 +189,9 @@ def _split_to_expression_tuple(mmml: str) -> tuple[list[str], ...]:
     return tuple("\n".join(e) for e in expression_list)
 
 
-def _drop_comments(expression: str):
-    def is_not_comment(line):
+def _drop_comments_and_empty_lines(expression: str) -> str:
+    def _(line):
         sline = line.strip()
-        return not (sline and sline[0] == mmml_converters.constants.COMMENT_MAGIC)
+        return bool(sline) and sline[0] != mmml_converters.constants.COMMENT_MAGIC
 
-    return "\n".join(filter(is_not_comment, expression.split("\n")))
+    return "\n".join(filter(_, expression.split("\n")))
