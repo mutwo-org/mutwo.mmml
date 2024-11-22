@@ -128,6 +128,12 @@ n 1 c4 mf
 
         self.reset()
 
+        # Set tempo
+        self.assertEqual(cns(tempo=20), self.c("cns _ 20"))
+        self.assertEqual(cns(tempo=[[0, 20], [1, 30]]), self.c("cns _ [[0,20],[1,30]]"))
+
+        self.reset()
+
         # Add children
         self.assertEqual(cns([n(), n()]), self.c("cns\n" "    n\n" "    n"))
         #  Nested children
@@ -143,6 +149,12 @@ n 1 c4 mf
 
         # Set tag
         self.assertEqual(cnc(tag="abc"), self.c("cnc abc"))
+
+        # Set tempo
+        self.assertEqual(cnc(tempo=20), self.c("cnc _ 20"))
+        self.assertEqual(cnc(tempo=[[0, 20], [1, 30]]), self.c("cnc _ [[0,20],[1,30]]"))
+
+        self.reset()
 
     def test_empty_argument(self):
         """Ensure that MMML takes the decoders default value if magic '_' is given as an argument"""

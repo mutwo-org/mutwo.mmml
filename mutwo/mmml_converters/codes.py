@@ -78,13 +78,13 @@ def r(
 
 
 @register_decoder
-def cns(event_tuple: EventTuple, tag=None):
-    return core_events.Consecution(event_tuple, tag=tag)
+def cns(event_tuple: EventTuple, tag=None, tempo=None):
+    return core_events.Consecution(event_tuple, tag=tag, tempo=tempo)
 
 
 @register_decoder
-def cnc(event_tuple: EventTuple, tag=None):
-    return core_events.Concurrence(event_tuple, tag=tag)
+def cnc(event_tuple: EventTuple, tag=None, tempo=None):
+    return core_events.Concurrence(event_tuple, tag=tag, tempo=tempo)
 
 
 @register_encoder(music_events.NoteLike)

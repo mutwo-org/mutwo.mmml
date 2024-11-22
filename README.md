@@ -69,13 +69,13 @@ $HEAD
 
 `mutwo.mmml` provides few builtin events:
 
-### `cns $tag`
+### `cns $tag $tempo`
 
-Renders to [Consecution](https://mutwo-org.github.io/api/mutwo.core_events.html#mutwo.core_events.Consecution), its only argument is its 'tag'.
+Renders to [Consecution](https://mutwo-org.github.io/api/mutwo.core_events.html#mutwo.core_events.Consecution).
 
-### `cnc $tag`
+### `cnc $tag $tempo`
 
-Renders to [Concurrence](https://mutwo-org.github.io/api/mutwo.core_events.html#mutwo.core_events.Concurrence), its only argument is its 'tag'.
+Renders to [Concurrence](https://mutwo-org.github.io/api/mutwo.core_events.html#mutwo.core_events.Concurrence).
 
 ### `n $duration $pitch $volume $playing_indicator_collection $notation_indicator_collection $lyric $instument_list`
 
