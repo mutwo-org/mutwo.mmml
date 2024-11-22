@@ -105,12 +105,12 @@ They generally aim to be easily implementable and not making the language too co
 
 # Let's express one simultaneous event that contains our music.
 
-sim music
+cnc music
 
 
     # It contains two sequences: a violin and a cello voice.
 
-    seq violin
+    cns violin
 
         # 'n' is used to express a note.
 
@@ -132,7 +132,7 @@ sim music
         r 1/4
 
 
-    seq cello
+    cns cello
 
         n 1/2 c3 p
         r 1/2
