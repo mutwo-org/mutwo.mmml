@@ -167,20 +167,64 @@ def _parse_indicator_collection(indicator_collection):
 def consecution(
     cns: core_events.Consecution,
 ):
-    tag = cns.tag
-    header = f"cns {tag}" if tag else "cns"
-    block = _compound_to_block(cns)
-    return f"{header}\n{block}"
+    return _compound("cns", cns)
 
 
 @register_encoder(core_events.Concurrence)
 def concurrence(
     cnc: core_events.Concurrence,
 ):
-    tag = getattr(cnc, "tag", None)
-    header = f"cnc {tag}" if tag else "cnc"
-    block = _compound_to_block(cnc)
+    return _compound("cnc", cnc)
+
+
+def _compound(code: str, e: core_events.abc.Compound):
+    tempo = _parse_tempo(e.tempo)
+    is_default_tempo = _is_default_tempo(e.tempo)
+    header = code
+    if e.tag and is_default_tempo:
+        header = f"{code} {e.tag}"
+    elif not is_default_tempo:
+        header = f"{code} {e.tag or '_'} {tempo}"
+    block = _compound_to_block(e)
     return f"{header}\n{block}"
+
+
+def _is_default_tempo(tempo: core_parameters.abc.Tempo):
+    default_bpm = 60
+    match tempo:
+        case core_parameters.FlexTempo():
+            return tempo.is_static and tempo.bpm == default_bpm
+        case _:
+            return tempo.bpm == default_bpm
+
+
+def _parse_tempo(tempo: core_parameters.abc.Tempo):
+    match tempo:
+        case core_parameters.FlexTempo():
+            point_list = list(
+                map(
+                    list,
+                    zip(
+                        map(_int, tempo.absolute_time_in_floats_tuple),
+                        map(_int, tempo.value_tuple),
+                    ),
+                )
+            )
+            return str(point_list).replace(" ", "")
+        case _:
+            return str(_int(tempo.bpm))
+
+
+def _int(v: float):
+    """Write number without digits if possible"""
+    try:
+        is_integer = v.is_integer()
+    except AttributeError:
+        pass
+    else:
+        if is_integer:
+            v = int(v)
+    return v
 
 
 def _compound_to_block(compound: core_events.abc.Compound) -> str:

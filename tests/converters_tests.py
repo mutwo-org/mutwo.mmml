@@ -205,6 +205,10 @@ class EventToMMMLExpressionTest(unittest.TestCase):
             self.c(cns([n(), cns([n()])])),
             "cns\n\n    r 1 _ _\n    cns\n\n        r 1 _ _\n\n",
         )
+        self.assertEqual(self.c(cns(tempo=20)), "cns _ 20\n")
+        self.assertEqual(
+            self.c(cns(tempo=[[0, 20], [1, 30]])), "cns _ [[0,20],[1,30]]\n"
+        )
 
     def test_concurrence(self):
         self.assertEqual(self.c(cnc()), "cnc\n")
