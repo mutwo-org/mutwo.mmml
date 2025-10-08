@@ -28,7 +28,7 @@ def n(
     playing_indicator_collection=None,
     notation_indicator_collection=None,
     lyric=music_parameters.DirectLyric(""),
-    instrument_list=[],
+    instrument_list=None,
 ):
     # In mutwo.music we simply use space for separating between
     # multiple pitches. In a MMML expression this isn't possible,
@@ -45,7 +45,7 @@ def n(
         playing_indicator_collection=playing_indicator_collection,
         notation_indicator_collection=notation_indicator_collection,
         lyric=lyric,
-        instrument_list=instrument_list,
+        instrument_list=instrument_list or [],
         grace_note_consecution=core_events.Consecution(event_tuple),
     )
 
@@ -63,7 +63,7 @@ def r(
     playing_indicator_collection=None,
     notation_indicator_collection=None,
     lyric=music_parameters.DirectLyric(""),
-    instrument_list=[],
+    instrument_list=None,
 ):
     return music_events.NoteLike(
         [],
@@ -72,7 +72,7 @@ def r(
         playing_indicator_collection=playing_indicator_collection,
         notation_indicator_collection=notation_indicator_collection,
         lyric=lyric,
-        instrument_list=instrument_list,
+        instrument_list=instrument_list or [],
         grace_note_consecution=core_events.Consecution(event_tuple),
     )
 
