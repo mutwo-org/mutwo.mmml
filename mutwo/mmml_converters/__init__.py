@@ -42,6 +42,7 @@ seq melody
 
 
 from . import constants
+from . import configurations
 
 from .codes import *
 from .frontends import *

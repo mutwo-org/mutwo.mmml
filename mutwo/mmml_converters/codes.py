@@ -2,10 +2,10 @@ import typing
 
 from mutwo import core_events
 from mutwo import core_parameters
+from mutwo.core_utilities import camel_case_to_snake_case
 from mutwo import mmml_converters
 from mutwo import music_events
 from mutwo import music_parameters
-
 
 __all__ = ("register_decoder", "register_encoder")
 
@@ -89,14 +89,14 @@ def cnc(event_tuple: EventTuple, tag=None, tempo=None):
 
 @register_encoder(music_events.NoteLike)
 def note_like(n: music_events.NoteLike):
-    d = _parse_duration(n.duration)
+    d = _asmmml.duration(n.duration)
 
-    pic = _parse_indicator_collection(n.playing_indicator_collection)
-    nic = _parse_indicator_collection(n.notation_indicator_collection)
+    pic = _asmmml.indicator_collection(n.playing_indicator_collection)
+    nic = _asmmml.indicator_collection(n.notation_indicator_collection)
 
     if n.pitch_list:
-        p = ",".join([_parse_pitch(p) for p in n.pitch_list])
-        v = _parse_volume(n.volume)
+        p = _asmmml.pitch_list(n.pitch_list)
+        v = _asmmml.volume(n.volume)
         header = f"n {d} {p} {v} {pic} {nic}"
     else:
         header = f"r {d} {pic} {nic}"
@@ -107,60 +107,6 @@ def note_like(n: music_events.NoteLike):
         block = ""
 
     return f"{header}{block}"
-
-
-def _parse_duration(duration: core_parameters.abc.Duration):
-    match duration:
-        case core_parameters.DirectDuration():
-            d = duration.beat_count
-            if (intd := int(d)) == float(d):
-                d = intd
-            return str(d)
-        case core_parameters.RatioDuration():
-            return str(duration.ratio)
-        case _:
-            raise NotImplementedError(duration)
-
-
-def _parse_pitch(pitch: music_parameters.abc.Pitch):
-    match pitch:
-        case music_parameters.WesternPitch():
-            return pitch.name
-        case music_parameters.ScalePitch():
-            return f"{pitch.scale_degree + 1}:{pitch.octave}"
-        case music_parameters.JustIntonationPitch():
-            r = str(pitch.ratio)
-            # Ensure we always render ratios with '/', otherwise
-            # the pitch parser of 'mutwo.music' won't be able to
-            # re-load them.
-            if "/" not in r:
-                r = f"{r}/1"
-            return r
-        case _:
-            raise NotImplementedError(pitch)
-
-
-def _parse_volume(volume: music_parameters.abc.Volume):
-    match volume:
-        case music_parameters.WesternVolume():
-            return volume.name
-        case _:
-            raise NotImplementedError()
-
-
-def _parse_indicator_collection(indicator_collection):
-    mmml = ""
-    for name, indicator in indicator_collection.indicator_dict.items():
-        if indicator.is_active:
-            # XXX: This needs to be fixed in 'mutwo.music':
-            # ottava with 'octave_count=0' must be inactive.
-            if getattr(indicator, "octave_count", None) == 0:
-                continue
-            for k, v in indicator.get_arguments_dict().items():
-                if mmml:
-                    mmml += ";"
-                mmml += f"{name}.{k}={v}"
-    return mmml or mmml_converters.constants.IGNORE_MAGIC
 
 
 @register_encoder(core_events.Consecution)
@@ -178,7 +124,7 @@ def concurrence(
 
 
 def _compound(code: str, e: core_events.abc.Compound):
-    tempo = _parse_tempo(e.tempo)
+    tempo = _asmmml.tempo(e.tempo)
     is_default_tempo = _is_default_tempo(e.tempo)
     header = code
     if e.tag and is_default_tempo:
@@ -198,35 +144,6 @@ def _is_default_tempo(tempo: core_parameters.abc.Tempo):
             return tempo.bpm == default_bpm
 
 
-def _parse_tempo(tempo: core_parameters.abc.Tempo):
-    match tempo:
-        case core_parameters.FlexTempo():
-            point_list = list(
-                map(
-                    list,
-                    zip(
-                        map(_int, tempo.absolute_time_in_floats_tuple),
-                        map(_int, tempo.value_tuple),
-                    ),
-                )
-            )
-            return str(point_list).replace(" ", "")
-        case _:
-            return str(_int(tempo.bpm))
-
-
-def _int(v: float):
-    """Write number without digits if possible"""
-    try:
-        is_integer = v.is_integer()
-    except AttributeError:
-        pass
-    else:
-        if is_integer:
-            v = int(v)
-    return v
-
-
 def _compound_to_block(compound: core_events.abc.Compound) -> str:
     if not compound:
         return ""
@@ -238,3 +155,20 @@ def _compound_to_block(compound: core_events.abc.Compound) -> str:
             block.append(line)
     block.append("")
     return "\n".join(block)
+
+
+class __asmmml:
+    _cache = {}  # singleton
+
+    def __getattr__(self, param_type):
+        try:
+            return self._cache[param_type]
+        except KeyError:
+            v = self._cache[param_type] = getattr(
+                mmml_converters.configurations,
+                f"DEFAULT_{camel_case_to_snake_case(param_type).upper()}_TO_MMML_STRING",
+            )
+            return v
+
+
+_asmmml = __asmmml()
