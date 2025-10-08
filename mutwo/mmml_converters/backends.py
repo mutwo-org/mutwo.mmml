@@ -11,6 +11,7 @@ __all__ = (
     "TempoToMMMLString",
     "PitchToMMMLString",
     "PitchListToMMMLString",
+    "PitchIntervalToMMMLString",
     "VolumeToMMMLString",
     "IndicatorCollectionToMMMLString",
 )
@@ -23,6 +24,9 @@ class EventToMMMLExpression(core_converters.abc.Converter):
 
 def encode_event(event: core_events.abc.Event) -> mmml_converters.MMMLExpression:
     return mmml_converters.constants.ENCODER_REGISTRY[type(event)](event)
+
+
+# NOTE Parameter parsers inverse '<Param>.from_any'
 
 
 class DurationToMMMLString(core_converters.abc.Converter):
@@ -94,6 +98,23 @@ class PitchListToMMMLString(core_converters.abc.Converter):
 
     def convert(self, pitch_list: music_parameters.abc.PitchList) -> str:
         return ",".join([self._parse_pitch(p) for p in pitch_list])
+
+
+class PitchIntervalToMMMLString(core_converters.abc.Converter):
+    def convert(self, pitch_interval: music_parameters.abc.PitchInterval) -> str:
+        match pitch_interval:
+            case music_parameters.JustIntonationPitch():
+                r = str(pitch_interval.ratio)
+                # Ensure we always render ratios with '/', otherwise
+                # the pitch parser of 'mutwo.music' won't be able to
+                # re-load them.
+                if "/" not in r:
+                    r = f"{r}/1"
+                return r
+            case music_parameters.WesternPitchInterval():
+                return pitch_interval.name
+            case _:
+                return str(pitch_interval.cents)
 
 
 class VolumeToMMMLString(core_converters.abc.Converter):

@@ -4,6 +4,7 @@ from mutwo import core_events
 from mutwo import mmml_converters
 from mutwo import mmml_utilities
 from mutwo import music_events
+from mutwo import music_parameters
 
 n = music_events.NoteLike
 cns = core_events.Consecution
@@ -218,3 +219,12 @@ class EventToMMMLExpressionTest(unittest.TestCase):
             self.c(cnc([n(), cnc([n()])])),
             "cnc\n\n    r 1 _ _\n    cnc\n\n        r 1 _ _\n\n",
         )
+
+
+class ParameterToMMMLStringTest(unittest.TestCase):
+    def test_pitch_interval(self):
+        c = mmml_converters.PitchIntervalToMMMLString()
+        _ = lambda i, v: self.assertEqual(c.convert(i), v)
+        _(music_parameters.WesternPitchInterval("p4"), "p4")
+        _(music_parameters.JustIntonationPitch("3/2"), "3/2")
+        _(music_parameters.DirectPitchInterval(200), "200")
