@@ -9,6 +9,7 @@ from mutwo import music_parameters
 n = music_events.NoteLike
 cns = core_events.Consecution
 cnc = core_events.Concurrence
+chn = core_events.Chronon
 
 
 class MMMLExpressionToEventTest(unittest.TestCase):
@@ -203,6 +204,9 @@ class EventToMMMLExpressionTest(unittest.TestCase):
         self.assertEqual(self.c(n()), "r 1 _ _ _")
         self.assertEqual(self.c(n([], "5/4")), "r 5/4 _ _ _")
         self.assertEqual(self.c(n(volume="mp")), "r 1 mp _ _")
+
+    def test_chronon(self):
+        self.assertEqual(self.c(chn(duration=1)), "r 1 _ _ _")
 
     def test_consecution(self):
         self.assertEqual(self.c(cns()), "cns\n")

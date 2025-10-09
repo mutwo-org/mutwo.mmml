@@ -111,6 +111,15 @@ def note_like(n: music_events.NoteLike):
     return f"{header}{block}"
 
 
+@register_encoder(core_events.Chronon)
+def chronon(chn: core_events.Chronon):
+    # NOTE Don't use directly local 'note_like' function to support case
+    # when user overrides 'note_like' encoder.
+    return mmml_converters.constants.ENCODER_REGISTRY[music_events.NoteLike](
+        music_events.NoteLike(duration=chn.duration)
+    )
+
+
 @register_encoder(core_events.Consecution)
 def consecution(
     cns: core_events.Consecution,
