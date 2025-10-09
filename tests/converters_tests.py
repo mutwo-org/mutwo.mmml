@@ -118,6 +118,11 @@ n 1 c4 mf
         self.assertEqual(n(duration=2), self.c("r 2"))
         self.assertEqual(n(duration="1/4"), self.c("r 1/4"))
 
+        # Set more parameters
+        r = n(duration=2, volume="pp")
+        r.playing_indicator_collection.fermata.type = "fermata"
+        self.assertEqual(r, self.c("r 2 pp fermata.type=fermata"))
+
     def test_decoder_cns(self):
         """Test that builtin decoder 'cns' returns Consecution"""
 
@@ -195,16 +200,17 @@ class EventToMMMLExpressionTest(unittest.TestCase):
         self.assertEqual(self.c(n("1/1", "1/4", "ff")), "n 1/4 1/1 ff _ _")
 
     def test_rest(self):
-        self.assertEqual(self.c(n()), "r 1 _ _")
-        self.assertEqual(self.c(n([], "5/4")), "r 5/4 _ _")
+        self.assertEqual(self.c(n()), "r 1 _ _ _")
+        self.assertEqual(self.c(n([], "5/4")), "r 5/4 _ _ _")
+        self.assertEqual(self.c(n(volume="mp")), "r 1 mp _ _")
 
     def test_consecution(self):
         self.assertEqual(self.c(cns()), "cns\n")
         self.assertEqual(self.c(cns(tag="abc")), "cns abc\n")
-        self.assertEqual(self.c(cns([n(), n()])), "cns\n\n    r 1 _ _\n    r 1 _ _\n")
+        self.assertEqual(self.c(cns([n(), n()])), "cns\n\n    r 1 _ _ _\n    r 1 _ _ _\n")
         self.assertEqual(
             self.c(cns([n(), cns([n()])])),
-            "cns\n\n    r 1 _ _\n    cns\n\n        r 1 _ _\n\n",
+            "cns\n\n    r 1 _ _ _\n    cns\n\n        r 1 _ _ _\n\n",
         )
         self.assertEqual(self.c(cns(tempo=20)), "cns _ 20\n")
         self.assertEqual(
@@ -214,10 +220,10 @@ class EventToMMMLExpressionTest(unittest.TestCase):
     def test_concurrence(self):
         self.assertEqual(self.c(cnc()), "cnc\n")
         self.assertEqual(self.c(cnc(tag="abc")), "cnc abc\n")
-        self.assertEqual(self.c(cnc([n(), n()])), "cnc\n\n    r 1 _ _\n    r 1 _ _\n")
+        self.assertEqual(self.c(cnc([n(), n()])), "cnc\n\n    r 1 _ _ _\n    r 1 _ _ _\n")
         self.assertEqual(
             self.c(cnc([n(), cnc([n()])])),
-            "cnc\n\n    r 1 _ _\n    cnc\n\n        r 1 _ _\n\n",
+            "cnc\n\n    r 1 _ _ _\n    cnc\n\n        r 1 _ _ _\n\n",
         )
 
 

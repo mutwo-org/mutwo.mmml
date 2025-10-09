@@ -90,16 +90,18 @@ def cnc(event_tuple: EventTuple, tag=None, tempo=None):
 @register_encoder(music_events.NoteLike)
 def note_like(n: music_events.NoteLike):
     d = _asmmml.duration(n.duration)
-
+    if _is_default_volume(n.volume):
+        v = mmml_converters.constants.IGNORE_MAGIC
+    else:
+        v = _asmmml.volume(n.volume)
     pic = _asmmml.indicator_collection(n.playing_indicator_collection)
     nic = _asmmml.indicator_collection(n.notation_indicator_collection)
 
     if n.pitch_list:
         p = _asmmml.pitch_list(n.pitch_list)
-        v = _asmmml.volume(n.volume)
         header = f"n {d} {p} {v} {pic} {nic}"
     else:
-        header = f"r {d} {pic} {nic}"
+        header = f"r {d} {v} {pic} {nic}"
 
     if n.grace_note_consecution:
         block = "\n" + _compound_to_block(n.grace_note_consecution)
@@ -142,6 +144,16 @@ def _is_default_tempo(tempo: core_parameters.abc.Tempo):
             return tempo.is_static and tempo.bpm == default_bpm
         case _:
             return tempo.bpm == default_bpm
+
+
+def _is_default_volume(volume: music_parameters.abc.Volume):
+    # XXX hardcoded in mutwo.music NoteLike, link to there
+    default_volume = "mf"
+    match volume:
+        case music_parameters.WesternVolume():
+            return volume.name == default_volume
+        case _:
+            return music_parameters.WesternVolume(default_volume) == volume
 
 
 def _compound_to_block(compound: core_events.abc.Compound) -> str:
